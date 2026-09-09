@@ -575,6 +575,12 @@
   .edit-field input:focus{ outline:none; border-color: var(--violet); }
   .edit-btn-row{ display:flex; gap:8px; flex-wrap:wrap; }
   .edit-btn{ width:auto; flex:1 1 auto; padding:9px 12px; font-size:13px; }
+  .lang-btn{
+    font-weight: 700;
+    font-size: 12px;
+    width: auto;
+    padding: 0 10px;
+  }
   @media (max-width: 480px){
     .edit-panel{ margin-left: 10px; }
   }
@@ -593,6 +599,7 @@
           <p id="subtitle">Loading your collection…</p>
         </div>
       </div>
+      <button class="icon-btn lang-btn" id="langBtn" title="Switch to French / Passer au français">EN</button>
       <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
@@ -686,6 +693,167 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 <script>
 (function(){
   "use strict";
+
+  // ---------- i18n (EN/FR) ----------
+  var LANG = localStorage.getItem('pwhl_lang') || 'en';
+  var I18N = {
+    en: {
+      loading: "Loading your collection…",
+      overallProgress: "Overall progress",
+      installApp: "📲 Install App",
+      feedback: "💬 Feedback",
+      installNoteAndroid: "If Android shows a \"Play Protect\" warning when installing, tap \"More details\" → \"Install anyway\" — that's a normal browser quirk, not a problem with the app.",
+      installNoteIOS: "On iPhone: tap the Share icon in Safari, then \"Add to Home Screen.\"",
+      searchPlaceholder: "Search name, number, or team across every set…",
+      clearSearch: "Clear search",
+      settings: "Settings",
+      settingsSub: "Your collection auto-saves to this browser. Download a backup too, since browser storage can get cleared and doesn't travel between browsers or devices.",
+      backup: "Backup",
+      downloadBackup: "⬇ Download my collection (JSON)",
+      restore: "Restore",
+      uploadBackup: "⬆ Upload a collection file",
+      storageNote: "Everything you check off is saved automatically to this browser (nothing is ever sent anywhere). That storage is tied to this browser and device though, so download a backup now and then — and upload it any time you open this file somewhere new.",
+      dangerZone: "Danger zone",
+      clearAllData: "Clear all data",
+      buildingImage: "Building your image…",
+      selectAll: "Select all",
+      selectNone: "Select none",
+      continueBuildImage: "Continue → Build image",
+      editSelection: "✏️ Edit selection",
+      saveImage: "💾 Save image",
+      shareNative: "📤 Share…",
+      shareTitleDoubles: "FS/FT Image",
+      shareTitleChase: "Chasing Image",
+      uncheckNote: "Uncheck anything you don\u2019t want to include, then continue.",
+      postNote: "Save it, then post the picture to Facebook Marketplace or your trading group.",
+      chaseBtnLabel: "📤 Create Chasing image for Facebook",
+      doublesBtnLabel: "📤 Create FS/FT image for Facebook",
+      chaseEmptyTitle: "No chase cards yet",
+      chaseEmptyDesc: "Tap the star icon on any card (or any parallel) to add it to your Chase list — the cards and specific parallels you're actively hunting for.",
+      doublesEmptyTitle: "No doubles yet",
+      doublesEmptyDesc: "Use the + stepper on any card or parallel to log extra copies — once you own 2 or more, it shows up here automatically. Or use \"Full extra sets of these\" on a section header to add a whole extra set at once, applied to every card in that type.",
+      missingEmptyTitle: "Nothing missing!",
+      missingEmptyDesc: "Every base card across every set is checked off. Amazing work.",
+      fullExtraSets: "Full extra sets of these",
+      hasParallels: "has parallels",
+      edited: "edited",
+      parallels: "Parallels",
+      save: "Save",
+      cancel: "Cancel",
+      resetOriginal: "Reset to original",
+      tabChase: "🎯 Chase",
+      tabDoubles: "📦 Doubles",
+      tabMissing: "📋 Missing",
+      collected: "collected",
+      missingCount: "missing",
+      extra: "extra",
+      extras: "extras",
+      baseCardsCheckedOff: " base cards checked off across all sets",
+      of: " of ",
+      removePhotoConfirm: "Remove this photo?",
+      resetAllConfirm: "Clear every checkmark, chase flag, double, photo, and card correction? This cannot be undone unless you have a downloaded backup.",
+      langToggleTitle: "Switch to French / Passer au français",
+      noMatchesTitle: "No matches",
+      noMatchesDesc: "Nothing found for \"{q}\" across any set. Try a player's last name, a card number, or a team."
+    },
+    fr: {
+      loading: "Chargement de votre collection…",
+      overallProgress: "Progression globale",
+      installApp: "📲 Installer l'appli",
+      feedback: "💬 Commentaires",
+      installNoteAndroid: "Si Android affiche un avertissement « Play Protect » lors de l'installation, touchez « Plus de détails » → « Installer quand même » — c'est une particularité normale du navigateur, pas un problème avec l'appli.",
+      installNoteIOS: "Sur iPhone : touchez l'icône de partage dans Safari, puis « Sur l'écran d'accueil ».",
+      searchPlaceholder: "Rechercher un nom, un numéro ou une équipe dans tous les sets…",
+      clearSearch: "Effacer la recherche",
+      settings: "Paramètres",
+      settingsSub: "Votre collection est enregistrée automatiquement dans ce navigateur. Téléchargez aussi une sauvegarde, car le stockage du navigateur peut être effacé et ne se transfère pas entre navigateurs ou appareils.",
+      backup: "Sauvegarde",
+      downloadBackup: "⬇ Télécharger ma collection (JSON)",
+      restore: "Restaurer",
+      uploadBackup: "⬆ Importer un fichier de collection",
+      storageNote: "Tout ce que vous cochez est enregistré automatiquement dans ce navigateur (rien n'est jamais envoyé ailleurs). Ce stockage est toutefois lié à ce navigateur et à cet appareil, alors téléchargez une sauvegarde de temps à autre — et importez-la à chaque fois que vous ouvrez ce fichier ailleurs.",
+      dangerZone: "Zone de danger",
+      clearAllData: "Effacer toutes les données",
+      buildingImage: "Création de votre image…",
+      selectAll: "Tout sélectionner",
+      selectNone: "Ne rien sélectionner",
+      continueBuildImage: "Continuer → Créer l'image",
+      editSelection: "✏️ Modifier la sélection",
+      saveImage: "💾 Enregistrer l'image",
+      shareNative: "📤 Partager…",
+      shareTitleDoubles: "Image ÉV/ÉC",
+      shareTitleChase: "Image de recherche",
+      uncheckNote: "Décochez ce que vous ne voulez pas inclure, puis continuez.",
+      postNote: "Enregistrez-la, puis publiez l'image sur Facebook Marketplace ou votre groupe d'échange.",
+      chaseBtnLabel: "📤 Créer une image de recherche pour Facebook",
+      doublesBtnLabel: "📤 Créer une image ÉV/ÉC pour Facebook",
+      chaseEmptyTitle: "Aucune carte recherchée pour l'instant",
+      chaseEmptyDesc: "Touchez l'icône étoile sur une carte (ou une parallèle) pour l'ajouter à votre liste de recherche — les cartes et parallèles précis que vous recherchez activement.",
+      doublesEmptyTitle: "Aucun double pour l'instant",
+      doublesEmptyDesc: "Utilisez le bouton + sur une carte ou une parallèle pour noter des copies supplémentaires — dès que vous en possédez 2 ou plus, elles apparaissent ici automatiquement. Ou utilisez « Sets complets supplémentaires de celles-ci » sur l'en-tête d'une section pour ajouter un set complet en une fois, appliqué à chaque carte de ce type.",
+      missingEmptyTitle: "Rien de manquant !",
+      missingEmptyDesc: "Chaque carte de base de chaque set est cochée. Travail incroyable.",
+      fullExtraSets: "Sets complets supplémentaires de celles-ci",
+      hasParallels: "parallèles disponibles",
+      edited: "modifié",
+      parallels: "Parallèles",
+      save: "Enregistrer",
+      cancel: "Annuler",
+      resetOriginal: "Réinitialiser à l'original",
+      tabChase: "🎯 Recherche",
+      tabDoubles: "📦 Doubles",
+      tabMissing: "📋 Manquantes",
+      collected: "obtenues",
+      missingCount: "manquante(s)",
+      extra: "supplémentaire",
+      extras: "supplémentaires",
+      baseCardsCheckedOff: " cartes de base cochées sur tous les sets",
+      of: " sur ",
+      removePhotoConfirm: "Supprimer cette photo ?",
+      resetAllConfirm: "Effacer chaque coche, indicateur de recherche, double, photo et correction de carte ? Cette action est irréversible, sauf si vous avez téléchargé une sauvegarde.",
+      langToggleTitle: "Passer à l'anglais / Switch to English",
+      noMatchesTitle: "Aucun résultat",
+      noMatchesDesc: "Rien trouvé pour « {q} » dans aucun set. Essayez le nom de famille d'une joueuse, un numéro de carte ou une équipe."
+    }
+  };
+  function T(key){
+    return (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
+  }
+  function applyStaticI18n(){
+    document.documentElement.lang = LANG;
+    var langBtn = document.getElementById('langBtn');
+    if(langBtn){ langBtn.textContent = LANG === 'en' ? 'FR' : 'EN'; langBtn.title = T('langToggleTitle'); }
+    var subtitleNode = document.getElementById('subtitle');
+    if(subtitleNode && !subtitleNode.dataset.rendered){ subtitleNode.textContent = T('loading'); }
+    var el;
+    if((el = document.getElementById('overallLabel'))) el.textContent = T('overallProgress');
+    if((el = document.getElementById('installBtn'))) el.textContent = T('installApp');
+    if((el = document.getElementById('feedbackBtn'))) el.textContent = T('feedback');
+    if((el = document.getElementById('installNote'))) el.textContent = T('installNoteAndroid');
+    if((el = document.getElementById('iosNote'))) el.textContent = T('installNoteIOS');
+    if((el = document.getElementById('searchInput'))) el.placeholder = T('searchPlaceholder');
+    if((el = document.getElementById('searchClear'))){ el.title = T('clearSearch'); el.setAttribute('aria-label', T('clearSearch')); }
+    if((el = document.getElementById('settingsBtn'))){ el.title = T('settings'); el.setAttribute('aria-label', T('settings')); }
+    var settingsOverlay = document.getElementById('settingsOverlay');
+    if(settingsOverlay){
+      var h2 = settingsOverlay.querySelector('h2'); if(h2) h2.textContent = T('settings');
+      var sub = settingsOverlay.querySelector('p.sub'); if(sub) sub.textContent = T('settingsSub');
+      var h4s = settingsOverlay.querySelectorAll('h4');
+      if(h4s[0]) h4s[0].textContent = T('backup');
+      if(h4s[1]) h4s[1].textContent = T('restore');
+      if(h4s[2]) h4s[2].textContent = T('dangerZone');
+      var storageNote = settingsOverlay.querySelector('.storage-note'); if(storageNote) storageNote.textContent = T('storageNote');
+    }
+    if((el = document.getElementById('exportBtn'))) el.textContent = T('downloadBackup');
+    if((el = document.getElementById('importBtn'))) el.textContent = T('uploadBackup');
+    if((el = document.getElementById('resetBtn'))) el.textContent = T('clearAllData');
+    if((el = document.getElementById('shareSelectAllBtn'))) el.textContent = T('selectAll');
+    if((el = document.getElementById('shareSelectNoneBtn'))) el.textContent = T('selectNone');
+    if((el = document.getElementById('shareContinueBtn'))) el.textContent = T('continueBuildImage');
+    if((el = document.getElementById('shareEditSelectionBtn'))) el.textContent = T('editSelection');
+    if((el = document.getElementById('shareSaveBtn'))) el.textContent = T('saveImage');
+    if((el = document.getElementById('shareNativeBtn'))) el.textContent = T('shareNative');
+  }
 
   var SET_ORDER = ["UD2024","UD2024-2025","UD2025-2026","FU2025-2026"];
   var SET_LABELS = {
@@ -894,13 +1062,13 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       btn.className = 'tab' + (tabKey===activeTab && !searchQuery.trim() ? ' active' : '') + ((tabKey==='CHASE'||tabKey==='DOUBLES'||tabKey==='MISSING') ? ' special':'');
       var label, count;
       if(tabKey==='CHASE'){
-        label = '🎯 Chase';
+        label = T('tabChase');
         count = countChase();
       } else if(tabKey==='DOUBLES'){
-        label = '📦 Doubles';
+        label = T('tabDoubles');
         count = countDoubles();
       } else if(tabKey==='MISSING'){
-        label = '📋 Missing';
+        label = T('tabMissing');
         count = countMissing();
       } else {
         label = SET_LABELS[tabKey];
@@ -1232,7 +1400,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     currentShareKind = kind;
     currentShareItems = items;
     currentShareSelected = items.map(function(){ return true; });
-    shareTitleEl.textContent = kind === 'doubles' ? 'FS/FT Image' : 'Chasing Image';
+    shareTitleEl.textContent = kind === 'doubles' ? T('shareTitleDoubles') : T('shareTitleChase');
     shareOverlay.classList.add('open');
     showSelectionUI();
   }
@@ -1265,7 +1433,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     sharePreviewActions.style.display = 'none';
     shareSelectActions.style.display = 'flex';
     shareContinueWrap.style.display = 'block';
-    shareSmallNote.textContent = 'Uncheck anything you don\u2019t want to include, then continue.';
+    shareSmallNote.textContent = T('uncheckNote');
     renderSelectionList();
   }
 
@@ -1289,7 +1457,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   function buildAndShowPreview(items){
     shareSelectActions.style.display = 'none';
     shareContinueWrap.style.display = 'none';
-    sharePreviewWrap.innerHTML = '<div class="share-loading">Building your image\u2026</div>';
+    sharePreviewWrap.innerHTML = '<div class="share-loading">'+T('buildingImage')+'</div>';
     buildShareCanvas(currentShareKind, items).then(function(canvas){
       canvas.toBlob(function(blob){
         currentShareBlob = blob;
@@ -1305,7 +1473,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
         }catch(e){}
         shareNativeBtn.style.display = canShareFiles ? 'block' : 'none';
         sharePreviewActions.style.display = 'block';
-        shareSmallNote.textContent = 'Save it, then post the picture to Facebook Marketplace or your trading group.';
+        shareSmallNote.textContent = T('postNote');
       }, 'image/png');
     });
   }
@@ -1399,7 +1567,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if(cs.img){
       wrap.addEventListener('contextmenu', function(e){
         e.preventDefault();
-        if(confirm('Remove this photo?')){ cs.img = null; renderAll(); }
+        if(confirm(T('removePhotoConfirm'))){ cs.img = null; renderAll(); }
       });
     }
     return wrap;
@@ -1512,7 +1680,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 
     var saveBtn = document.createElement('button');
     saveBtn.className = 'btn btn-primary edit-btn';
-    saveBtn.textContent = 'Save';
+    saveBtn.textContent = T('save');
     saveBtn.addEventListener('click', function(e){
       e.stopPropagation();
       var numVal = numField.querySelector('input').value.trim();
@@ -1527,7 +1695,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 
     var cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn btn-outline edit-btn';
-    cancelBtn.textContent = 'Cancel';
+    cancelBtn.textContent = T('cancel');
     cancelBtn.addEventListener('click', function(e){
       e.stopPropagation();
       var pkey = setKey+'|'+type+'|'+card._id;
@@ -1541,7 +1709,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if(hasOverride(setKey, type, card._id)){
       var resetBtn = document.createElement('button');
       resetBtn.className = 'btn btn-danger-outline edit-btn';
-      resetBtn.textContent = 'Reset to original';
+      resetBtn.textContent = T('resetOriginal');
       resetBtn.addEventListener('click', function(e){
         e.stopPropagation();
         clearOverride(setKey, type, card._id);
@@ -1573,7 +1741,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     var mainDiv = document.createElement('div');
     mainDiv.className = 'card-main';
     mainDiv.innerHTML =
-      '<div class="card-num">'+ (opts.showSetTag ? '<span class="set-tag">'+SET_LABELS[setKey]+' · '+type+'</span>' : '') + '#'+disp.num+(hasOverride(setKey,type,card._id) ? '<span class="edited-flag" title="Edited from the original checklist">edited</span>' : '')+'</div>'+
+      '<div class="card-num">'+ (opts.showSetTag ? '<span class="set-tag">'+SET_LABELS[setKey]+' · '+type+'</span>' : '') + '#'+disp.num+(hasOverride(setKey,type,card._id) ? '<span class="edited-flag" title="Edited from the original checklist">'+T('edited')+'</span>' : '')+'</div>'+
       '<div class="card-name">'+disp.name+ (disp.rc?'<span class="rc-badge">RC</span>':'') +'</div>'+
       '<div class="card-team">'+disp.team+'</div>';
     row.appendChild(mainDiv);
@@ -1664,7 +1832,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       var isOpen = !!parallelOpen[pkey];
       var toggle = document.createElement('button');
       toggle.className = 'parallels-toggle' + (pt.have>0 ? ' has-some':'');
-      toggle.innerHTML = '<span class="pt-chevron'+(isOpen?' open':'')+'">'+svgChevron()+'</span> Parallels <span class="pt-count">'+pt.have+'/'+pt.total+'</span>';
+      toggle.innerHTML = '<span class="pt-chevron'+(isOpen?' open':'')+'">'+svgChevron()+'</span> '+T('parallels')+' <span class="pt-count">'+pt.have+'/'+pt.total+'</span>';
       toggle.addEventListener('click', function(e){
         e.stopPropagation();
         parallelOpen[pkey] = !parallelOpen[pkey];
@@ -1708,7 +1876,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       var header = document.createElement('div');
       header.className = 'type-header';
       header.innerHTML =
-        '<div class="th-left"><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg><h3>'+type+'</h3>'+(hasParallels?'<span class="has-parallels-flag">has parallels</span>':'')+'</div>'+
+        '<div class="th-left"><svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg><h3>'+type+'</h3>'+(hasParallels?'<span class="has-parallels-flag">'+T('hasParallels')+'</span>':'')+'</div>'+
         '<div class="th-count">'+tt.have+' / '+tt.total+' ('+tPct+'%)</div>';
       header.addEventListener('click', function(){
         collapsed[key] = !collapsed[key];
@@ -1721,7 +1889,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       fdWrap.className = 'full-double-toggle' + (fsCount>0 ? ' active':'');
       var fdLabelText = document.createElement('span');
       fdLabelText.className = 'fd-label';
-      fdLabelText.textContent = 'Full extra sets of these';
+      fdLabelText.textContent = T('fullExtraSets');
       fdWrap.appendChild(fdLabelText);
 
       var fdStepper = document.createElement('div');
@@ -1767,7 +1935,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if(countChase() > 0){
       var shareBtn = document.createElement('button');
       shareBtn.className = 'share-flyer-btn';
-      shareBtn.textContent = '📤 Create Chasing image for Facebook';
+      shareBtn.textContent = T('chaseBtnLabel');
       shareBtn.addEventListener('click', function(){ openShareBuilder('chasing'); });
       wrap.appendChild(shareBtn);
     }
@@ -1810,7 +1978,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       if(setHasAny) wrap.appendChild(setBlock);
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎯</div><h4>No chase cards yet</h4><p>Tap the star icon on any card (or any parallel) to add it to your Chase list — the cards and specific parallels you\'re actively hunting for.</p></div>';
+      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎯</div><h4>'+T('chaseEmptyTitle')+'</h4><p>'+T('chaseEmptyDesc')+'</p></div>';
     }
     return wrap;
   }
@@ -1820,7 +1988,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if(countDoubles() > 0){
       var shareBtn = document.createElement('button');
       shareBtn.className = 'share-flyer-btn';
-      shareBtn.textContent = '📤 Create FS/FT image for Facebook';
+      shareBtn.textContent = T('doublesBtnLabel');
       shareBtn.addEventListener('click', function(){ openShareBuilder('doubles'); });
       wrap.appendChild(shareBtn);
     }
@@ -1852,7 +2020,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
           var header = document.createElement('div');
           header.className = 'type-header';
           header.style.cursor = 'default';
-          header.innerHTML = '<div class="th-left"><h3>'+SET_LABELS[setKey]+' — '+type+'</h3></div><div class="th-count">'+rows.length+' extra'+(rows.length===1?'':'s')+'</div>';
+          header.innerHTML = '<div class="th-left"><h3>'+SET_LABELS[setKey]+' — '+type+'</h3></div><div class="th-count">'+rows.length+' '+(rows.length===1?T('extra'):T('extras'))+'</div>';
           section.appendChild(header);
           if(fsCount>0){
             var banner = document.createElement('div');
@@ -1872,7 +2040,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       if(setHasAny) wrap.appendChild(setBlock);
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">📦</div><h4>No doubles yet</h4><p>Use the + stepper on any card or parallel to log extra copies — once you own 2 or more, it shows up here automatically. Or use "Full extra sets of these" on a section header to add a whole extra set at once, applied to every card in that type.</p></div>';
+      wrap.innerHTML = '<div class="empty-state"><div class="glyph">📦</div><h4>'+T('doublesEmptyTitle')+'</h4><p>'+T('doublesEmptyDesc')+'</p></div>';
     }
     return wrap;
   }
@@ -1899,7 +2067,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
           var header = document.createElement('div');
           header.className = 'type-header';
           header.style.cursor = 'default';
-          header.innerHTML = '<div class="th-left"><h3>'+type+'</h3></div><div class="th-count">'+rows.length+' missing</div>';
+          header.innerHTML = '<div class="th-left"><h3>'+type+'</h3></div><div class="th-count">'+rows.length+' '+T('missingCount')+'</div>';
           section.appendChild(header);
           var listDiv = document.createElement('div');
           listDiv.className = 'card-list';
@@ -1917,7 +2085,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       }
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎉</div><h4>Nothing missing!</h4><p>Every base card across every set is checked off. Amazing work.</p></div>';
+      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎉</div><h4>'+T('missingEmptyTitle')+'</h4><p>'+T('missingEmptyDesc')+'</p></div>';
     }
     return wrap;
   }
@@ -1964,7 +2132,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       }
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🔎</div><h4>No matches</h4><p>Nothing found for "'+query+'" across any set. Try a player\'s last name, a card number, or a team.</p></div>';
+      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🔎</div><h4>'+T('noMatchesTitle')+'</h4><p>'+T('noMatchesDesc').replace('{q}', query)+'</p></div>';
     }
     return wrap;
   }
@@ -1987,7 +2155,8 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     var ov = overallTotals();
     overallCountEl.textContent = ov.have + ' / ' + ov.total;
     overallFillEl.style.width = (ov.total ? Math.round(100*ov.have/ov.total) : 0) + '%';
-    subtitleEl.textContent = ov.have + ' of ' + ov.total + ' base cards checked off across all sets';
+    subtitleEl.textContent = ov.have + T('of') + ov.total + T('baseCardsCheckedOff');
+    subtitleEl.dataset.rendered = '1';
     saveState();
   }
 
@@ -2003,6 +2172,14 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     searchQuery = '';
     searchInputEl.value = '';
     searchWrapEl.classList.remove('has-query');
+    renderAll();
+  });
+
+  // ---------- Language toggle ----------
+  document.getElementById('langBtn').addEventListener('click', function(){
+    LANG = (LANG === 'en') ? 'fr' : 'en';
+    localStorage.setItem('pwhl_lang', LANG);
+    applyStaticI18n();
     renderAll();
   });
 
@@ -2077,7 +2254,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   });
 
   document.getElementById('resetBtn').addEventListener('click', function(){
-    if(confirm('Clear every checkmark, chase flag, double, photo, and card correction? This cannot be undone unless you have a downloaded backup.')){
+    if(confirm(T('resetAllConfirm'))){
       state = { cards:{}, fullDoubles:{}, overrides:{} };
       try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
       renderAll();
@@ -2088,6 +2265,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 
   // ---------- init ----------
   loadState();
+  applyStaticI18n();
   renderAll();
 })();
   // ---------- Install button (native install prompt) ----------
