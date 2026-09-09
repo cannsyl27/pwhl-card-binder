@@ -150,6 +150,42 @@
   }
   .search-set-heading:first-child{ margin-top:4px; }
 
+  /* ---------- Header install/feedback buttons ---------- */
+  .header-actions{
+    display:flex; gap:10px; margin-top:12px;
+  }
+  .header-btn{
+    flex:1;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background: linear-gradient(135deg, var(--gold), #f0c064);
+    color: var(--navy);
+    border:none; border-radius:10px;
+    padding:10px 12px; font-weight:800; font-size:13.5px;
+    cursor:pointer;
+  }
+  .header-btn-outline{
+    background: rgba(255,255,255,0.12);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.28);
+  }
+  .install-note{
+    font-size:11.5px; color:#c9d0ea; margin:8px 2px 0; line-height:1.4;
+  }
+  .select-actions-row{ display:flex; gap:10px; margin:12px 0 0; }
+  .select-actions-row .btn{ flex:1; }
+  .select-item-row{
+    display:flex; align-items:flex-start; gap:10px;
+    padding:10px 6px; border-bottom:1px solid #eceef7;
+    cursor:pointer;
+  }
+  .select-item-row:last-child{ border-bottom:none; }
+  .select-item-row input[type=checkbox]{
+    width:19px; height:19px; margin-top:3px; flex-shrink:0; accent-color: var(--violet);
+  }
+  .select-item-name{ font-weight:800; font-size:14px; color:var(--navy); }
+  .select-item-sub{ font-size:12.5px; color:var(--muted); }
+  .select-item-sub2{ font-size:12.5px; color:var(--violet); font-weight:700; }
+
   .share-flyer-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
     width: calc(100% - 32px); margin: 14px 16px 6px;
@@ -566,6 +602,12 @@
       </div>
       <div class="bar-track"><div class="bar-fill" id="overallFill" style="width:0%"></div></div>
     </div>
+    <div class="header-actions">
+      <button class="header-btn" id="installBtn" style="display:none;">📲 Install App</button>
+      <button class="header-btn header-btn-outline" id="feedbackBtn">💬 Feedback</button>
+    </div>
+    <p class="install-note" id="installNote" style="display:none;">If Android shows a "Play Protect" warning when installing, tap "More details" → "Install anyway" — that's a normal browser quirk, not a problem with the app.</p>
+    <p class="install-note" id="iosNote" style="display:none;">On iPhone: tap the Share icon in Safari, then "Add to Home Screen."</p>
     <div class="search-wrap">
       <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
       <input type="text" id="searchInput" placeholder="Search name, number, or team across every set…" autocomplete="off">
@@ -615,11 +657,21 @@
     <div class="share-preview-wrap" id="sharePreviewWrap">
       <div class="share-loading">Building your image…</div>
     </div>
-    <div class="modal-section share-actions">
-      <button class="btn btn-primary" id="shareSaveBtn">💾 Save image</button>
-      <button class="btn btn-outline" id="shareNativeBtn" style="display:none;">📤 Share…</button>
+    <div class="select-actions-row" id="shareSelectActions" style="display:none;">
+      <button class="btn btn-outline" id="shareSelectAllBtn">Select all</button>
+      <button class="btn btn-outline" id="shareSelectNoneBtn">Select none</button>
     </div>
-    <p class="small-note">Save it, then post the picture to Facebook Marketplace or your trading group.</p>
+    <div class="modal-section" id="shareContinueWrap" style="display:none;">
+      <button class="btn btn-primary" id="shareContinueBtn" style="width:100%;">Continue → Build image</button>
+    </div>
+    <div class="modal-section" id="sharePreviewActions" style="display:none;">
+      <button class="btn btn-outline" id="shareEditSelectionBtn" style="width:100%; margin-bottom:8px;">✏️ Edit selection</button>
+      <div class="share-actions">
+        <button class="btn btn-primary" id="shareSaveBtn">💾 Save image</button>
+        <button class="btn btn-outline" id="shareNativeBtn" style="display:none;">📤 Share…</button>
+      </div>
+    </div>
+    <p class="small-note" id="shareSmallNote">Save it, then post the picture to Facebook Marketplace or your trading group.</p>
   </div>
 </div>
 
@@ -1160,8 +1212,14 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   var shareTitleEl = document.getElementById('shareTitle');
   var shareSaveBtn = document.getElementById('shareSaveBtn');
   var shareNativeBtn = document.getElementById('shareNativeBtn');
+  var shareSelectActions = document.getElementById('shareSelectActions');
+  var shareContinueWrap = document.getElementById('shareContinueWrap');
+  var sharePreviewActions = document.getElementById('sharePreviewActions');
+  var shareSmallNote = document.getElementById('shareSmallNote');
   var currentShareBlob = null;
   var currentShareKind = null;
+  var currentShareItems = [];
+  var currentShareSelected = [];
 
   function openShareBuilder(kind){
     var items = kind === 'doubles' ? collectDoublesItems() : collectChasingItems();
@@ -1170,10 +1228,67 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       return;
     }
     currentShareKind = kind;
+    currentShareItems = items;
+    currentShareSelected = items.map(function(){ return true; });
     shareTitleEl.textContent = kind === 'doubles' ? 'FS/FT Image' : 'Chasing Image';
-    sharePreviewWrap.innerHTML = '<div class="share-loading">Building your image\u2026</div>';
     shareOverlay.classList.add('open');
-    buildShareCanvas(kind, items).then(function(canvas){
+    showSelectionUI();
+  }
+
+  function renderSelectionList(){
+    var wrap = document.createElement('div');
+    currentShareItems.forEach(function(it, idx){
+      var row = document.createElement('label');
+      row.className = 'select-item-row';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = currentShareSelected[idx];
+      cb.addEventListener('change', function(){ currentShareSelected[idx] = cb.checked; });
+      row.appendChild(cb);
+      var text = document.createElement('div');
+      var line2 = it.setLabel+' \u00b7 '+it.type+' #'+it.num;
+      var line3 = it.team + (it.parallel ? ' \u00b7 '+it.parallel : '') + (currentShareKind==='doubles' ? '  \u00b7  x'+it.extra+' extra' : '');
+      text.innerHTML = '<div class="select-item-name"></div><div class="select-item-sub"></div><div class="select-item-sub2"></div>';
+      text.children[0].textContent = it.name;
+      text.children[1].textContent = line2;
+      text.children[2].textContent = line3;
+      row.appendChild(text);
+      wrap.appendChild(row);
+    });
+    sharePreviewWrap.innerHTML = '';
+    sharePreviewWrap.appendChild(wrap);
+  }
+
+  function showSelectionUI(){
+    sharePreviewActions.style.display = 'none';
+    shareSelectActions.style.display = 'flex';
+    shareContinueWrap.style.display = 'block';
+    shareSmallNote.textContent = 'Uncheck anything you don\u2019t want to include, then continue.';
+    renderSelectionList();
+  }
+
+  document.getElementById('shareSelectAllBtn').addEventListener('click', function(){
+    currentShareSelected = currentShareSelected.map(function(){ return true; });
+    renderSelectionList();
+  });
+  document.getElementById('shareSelectNoneBtn').addEventListener('click', function(){
+    currentShareSelected = currentShareSelected.map(function(){ return false; });
+    renderSelectionList();
+  });
+  document.getElementById('shareContinueBtn').addEventListener('click', function(){
+    var selectedItems = currentShareItems.filter(function(it, idx){ return currentShareSelected[idx]; });
+    if(!selectedItems.length){ toast('Select at least one card'); return; }
+    buildAndShowPreview(selectedItems);
+  });
+  document.getElementById('shareEditSelectionBtn').addEventListener('click', function(){
+    showSelectionUI();
+  });
+
+  function buildAndShowPreview(items){
+    shareSelectActions.style.display = 'none';
+    shareContinueWrap.style.display = 'none';
+    sharePreviewWrap.innerHTML = '<div class="share-loading">Building your image\u2026</div>';
+    buildShareCanvas(currentShareKind, items).then(function(canvas){
       canvas.toBlob(function(blob){
         currentShareBlob = blob;
         var url = URL.createObjectURL(blob);
@@ -1187,6 +1302,8 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
           canShareFiles = !!(navigator.canShare && navigator.canShare({ files:[new File([blob],'x.png',{type:'image/png'})] }));
         }catch(e){}
         shareNativeBtn.style.display = canShareFiles ? 'block' : 'none';
+        sharePreviewActions.style.display = 'block';
+        shareSmallNote.textContent = 'Save it, then post the picture to Facebook Marketplace or your trading group.';
       }, 'image/png');
     });
   }
@@ -1971,6 +2088,50 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   loadState();
   renderAll();
 })();
+  // ---------- Install button (native install prompt) ----------
+  var deferredInstallPrompt = null;
+  var installBtn = document.getElementById('installBtn');
+  var installNote = document.getElementById('installNote');
+  var iosNote = document.getElementById('iosNote');
+
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  if(isIOS && !isStandalone){
+    iosNote.style.display = 'block';
+  }
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    installBtn.style.display = 'flex';
+    installNote.style.display = 'block';
+  });
+
+  installBtn.addEventListener('click', function(){
+    if(!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(){
+      deferredInstallPrompt = null;
+      installBtn.style.display = 'none';
+      installNote.style.display = 'none';
+    });
+  });
+
+  window.addEventListener('appinstalled', function(){
+    installBtn.style.display = 'none';
+    installNote.style.display = 'none';
+  });
+
+  // ---------- Feedback button (mailto, address split to dodge basic scrapers) ----------
+  var fbUser = 'cannsyl';
+  var fbDomain = 'hotmail.com';
+  document.getElementById('feedbackBtn').addEventListener('click', function(){
+    var addr = fbUser + '@' + fbDomain;
+    var subject = encodeURIComponent('PWHL Card Binder — Feedback');
+    var body = encodeURIComponent('Hi! I wanted to share some feedback about the PWHL Card Binder app:\n\n');
+    window.location.href = 'mailto:' + addr + '?subject=' + subject + '&body=' + body;
+  });
 
 </script>
 <script>
