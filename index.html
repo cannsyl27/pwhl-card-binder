@@ -171,6 +171,17 @@
   .install-note{
     font-size:11.5px; color:#c9d0ea; margin:8px 2px 0; line-height:1.4;
   }
+  .inapp-browser-banner{
+    background:#fff3cd; border:1px solid #f0c869; border-radius:10px;
+    padding:10px 12px; margin:0 14px 10px; font-size:12.5px; color:#6b4c05;
+    line-height:1.45;
+  }
+  .inapp-browser-banner strong{ display:block; margin-bottom:3px; }
+  .inapp-browser-banner .copy-link-btn{
+    display:inline-block; margin-top:7px; background:#fff; border:1px solid #e0b95a;
+    color:#6b4c05; font-weight:700; font-size:12px; padding:5px 10px;
+    border-radius:7px; cursor:pointer;
+  }
   .select-actions-row{ display:flex; gap:10px; margin:12px 0 0; }
   .select-actions-row .btn{ flex:1; }
   .select-item-row{
@@ -382,6 +393,44 @@
     background: var(--gold); border-color: var(--gold); color:white;
   }
 
+  .incoming-btn{
+    width:30px; height:30px; border-radius:8px;
+    border: 1px solid var(--line); background:white;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; color:#b9c2d6;
+    transition: all .15s ease;
+  }
+  .incoming-btn.sm{ width:24px; height:24px; border-radius:7px; }
+  .incoming-btn:hover{ border-color:#7fb6e8; color:#3f8fd6; }
+  .incoming-btn.on{
+    background: #3f8fd6; border-color: #3f8fd6; color:white;
+  }
+  .incoming-badge{
+    display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.02em;
+    background:#e5f1fb; color:#2569a6; border:1px solid #bfdcf3;
+    padding:1px 6px; border-radius:5px; margin-left:6px; vertical-align:1px;
+    white-space:nowrap;
+  }
+  .card-row.incoming-dim, .parallel-row.incoming-dim{
+    opacity:.5;
+  }
+  .card-row.incoming-dim .incoming-btn, .parallel-row.incoming-dim .incoming-btn{
+    opacity:1;
+  }
+  .filter-toggle-row{
+    display:flex; justify-content:flex-end; margin-bottom:10px;
+  }
+  .filter-toggle-btn{
+    display:flex; align-items:center; gap:6px;
+    border:1px solid var(--line); background:white; color:var(--navy);
+    border-radius:20px; padding:6px 12px; font-size:13px; font-weight:600;
+    cursor:pointer; transition: all .15s ease;
+  }
+  .filter-toggle-btn:hover{ border-color:#7fb6e8; }
+  .filter-toggle-btn.on{
+    background:#3f8fd6; border-color:#3f8fd6; color:white;
+  }
+
   .qty-stepper{
     display:flex; align-items:center; gap:2px;
     background: var(--ice-2); border-radius:8px; padding:2px;
@@ -590,6 +639,11 @@
 </head>
 <body>
 <div class="app">
+  <div class="inapp-browser-banner" id="inAppBrowserBanner" style="display:none;">
+    <strong id="inAppBrowserTitle"></strong>
+    <span id="inAppBrowserBody"></span>
+    <button class="copy-link-btn" id="copyAppLinkBtn"></button>
+  </div>
   <header class="topbar">
     <div class="topbar-row">
       <div class="brand">
@@ -754,7 +808,19 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       resetAllConfirm: "Clear every checkmark, chase flag, double, photo, and card correction? This cannot be undone unless you have a downloaded backup.",
       langToggleTitle: "Switch to French / Passer au français",
       noMatchesTitle: "No matches",
-      noMatchesDesc: "Nothing found for \"{q}\" across any set. Try a player's last name, a card number, or a team."
+      noMatchesDesc: "Nothing found for \"{q}\" across any set. Try a player's last name, a card number, or a team.",
+      incomingBadge: "📦 On the way",
+      incomingAdd: "Mark as on the way (purchased, not arrived yet)",
+      incomingRemove: "Remove \"on the way\" status",
+      incomingAddedToast: "Marked as on the way",
+      incomingRemovedToast: "Removed \"on the way\" status",
+      incomingFilterLabel: "📦 Incoming only",
+      incomingFilterEmptyTitle: "Nothing marked as incoming",
+      incomingFilterEmptyDesc: "Tap the package icon on any missing or chase card once you've bought it, so you can tell \"already ordered\" from \"still need to find.\"",
+      inAppBrowserTitle: "⚠️ Heads up: you're inside the Facebook app",
+      inAppBrowserBody: "Facebook's built-in browser blocks downloads and app installs, so \"Install App\" and \"Download my collection\" won't work here. Tap the ⋮ (or ···) menu at the top of this screen and choose \"Open in Chrome\" (or \"Open in Browser\") to use everything properly.",
+      copyAppLink: "📋 Copy this link instead",
+      copyAppLinkToast: "Link copied — paste it into Chrome or Safari"
     },
     fr: {
       loading: "Chargement de votre collection…",
@@ -813,7 +879,19 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       resetAllConfirm: "Effacer chaque coche, indicateur de recherche, double, photo et correction de carte ? Cette action est irréversible, sauf si vous avez téléchargé une sauvegarde.",
       langToggleTitle: "Passer à l'anglais / Switch to English",
       noMatchesTitle: "Aucun résultat",
-      noMatchesDesc: "Rien trouvé pour « {q} » dans aucun set. Essayez le nom de famille d'une joueuse, un numéro de carte ou une équipe."
+      noMatchesDesc: "Rien trouvé pour « {q} » dans aucun set. Essayez le nom de famille d'une joueuse, un numéro de carte ou une équipe.",
+      incomingBadge: "📦 En route",
+      incomingAdd: "Marquer comme en route (acheté, pas encore reçu)",
+      incomingRemove: "Retirer le statut « en route »",
+      incomingAddedToast: "Marqué comme en route",
+      incomingRemovedToast: "Statut « en route » retiré",
+      incomingFilterLabel: "📦 En route seulement",
+      incomingFilterEmptyTitle: "Rien marqué comme en route",
+      incomingFilterEmptyDesc: "Touchez l'icône de colis sur une carte manquante ou recherchée une fois que vous l'avez achetée, pour distinguer « déjà commandé » de « encore à trouver ».",
+      inAppBrowserTitle: "⚠️ Attention : vous êtes dans l'appli Facebook",
+      inAppBrowserBody: "Le navigateur intégré de Facebook bloque les téléchargements et l'installation d'applis, donc « Installer l'appli » et « Télécharger ma collection » ne fonctionneront pas ici. Touchez le menu ⋮ (ou ···) en haut de cet écran et choisissez « Ouvrir dans Chrome » (ou « Ouvrir dans le navigateur ») pour tout utiliser correctement.",
+      copyAppLink: "📋 Copier ce lien à la place",
+      copyAppLinkToast: "Lien copié — collez-le dans Chrome ou Safari"
     }
   };
   function T(key){
@@ -853,6 +931,36 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if((el = document.getElementById('shareEditSelectionBtn'))) el.textContent = T('editSelection');
     if((el = document.getElementById('shareSaveBtn'))) el.textContent = T('saveImage');
     if((el = document.getElementById('shareNativeBtn'))) el.textContent = T('shareNative');
+    if((el = document.getElementById('inAppBrowserTitle'))) el.textContent = T('inAppBrowserTitle');
+    if((el = document.getElementById('inAppBrowserBody'))) el.textContent = T('inAppBrowserBody');
+    if((el = document.getElementById('copyAppLinkBtn'))) el.textContent = T('copyAppLink');
+  }
+
+  function isInAppBrowser(){
+    var ua = navigator.userAgent || '';
+    return /FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok/i.test(ua);
+  }
+  function initInAppBrowserBanner(){
+    if(!isInAppBrowser()) return;
+    var banner = document.getElementById('inAppBrowserBanner');
+    if(banner) banner.style.display = 'block';
+    var copyBtn = document.getElementById('copyAppLinkBtn');
+    if(copyBtn){
+      copyBtn.addEventListener('click', function(){
+        var link = window.location.href.split('#')[0].split('?')[0];
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(link).then(function(){ toast(T('copyAppLinkToast')); });
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = link;
+          document.body.appendChild(ta);
+          ta.select();
+          try{ document.execCommand('copy'); }catch(e){}
+          document.body.removeChild(ta);
+          toast(T('copyAppLinkToast'));
+        }
+      });
+    }
   }
 
   var SET_ORDER = ["UD2024","UD2024-2025","UD2025-2026","FU2025-2026"];
@@ -913,6 +1021,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   var collapsed = {};        // key: setKey+"|"+type -> bool (type section collapsed)
   var parallelOpen = {};     // key: setKey+"|"+type+"|"+id -> bool (parallel panel expanded)
   var editOpen = {};         // key: setKey+"|"+type+"|"+id -> bool (edit panel expanded)
+  var incomingFilterOn = false; // Missing/Chase tabs: show only cards marked "on the way"
 
   function getParallelDefs(setKey, type){
     return (PWHL_PARALLELS[setKey] && PWHL_PARALLELS[setKey][type]) || [];
@@ -1523,6 +1632,12 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   function svgPencil(){
     return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
   }
+  function svgPackage(filled){
+    return '<svg width="15" height="15" viewBox="0 0 24 24" fill="'+(filled?'currentColor':'none')+'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>';
+  }
+  function svgPackageSm(filled){
+    return '<svg width="12" height="12" viewBox="0 0 24 24" fill="'+(filled?'currentColor':'none')+'" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>';
+  }
 
   function makeThumb(setKey, type, card, cs){
     var wrap = document.createElement('div');
@@ -1580,13 +1695,14 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     var cs = ensureCardState(setKey, type, card._id);
     var ps = ensureParallelState(cs, pname);
     var row = document.createElement('div');
-    row.className = 'parallel-row' + (ps.have?' have':'') + (ps.chase?' chasing':'');
+    row.className = 'parallel-row' + (ps.have?' have':'') + (ps.chase?' chasing':'') + (ps.incoming && !ps.have ? ' incoming-dim':'');
 
     var main = document.createElement('div');
     main.className = 'parallel-main';
     var label = opts.showCardInfo
       ? '<span class="set-tag">'+SET_LABELS[setKey]+' · '+type+'</span>#'+disp.num+' '+disp.name+' <span class="parallel-name-inline">— '+pname+'</span>'
       : '<span class="parallel-name">'+pname+'</span>';
+    if(ps.incoming && !ps.have) label += '<span class="incoming-badge">'+T('incomingBadge')+'</span>';
     main.innerHTML = label;
     row.appendChild(main);
 
@@ -1604,6 +1720,19 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       renderAll();
     });
     actions.appendChild(chaseBtn);
+
+    var incomingBtn = document.createElement('button');
+    incomingBtn.className = 'incoming-btn sm' + (ps.incoming ? ' on':'');
+    incomingBtn.title = ps.incoming ? T('incomingRemove') : T('incomingAdd');
+    incomingBtn.innerHTML = svgPackageSm(ps.incoming);
+    incomingBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      ps.incoming = !ps.incoming;
+      toast(ps.incoming ? T('incomingAddedToast') : T('incomingRemovedToast'));
+      renderAll();
+    });
+    actions.appendChild(incomingBtn);
+
 
     var stepper = document.createElement('div');
     stepper.className = 'qty-stepper sm' + (ps.qty>1?' extra':'');
@@ -1734,7 +1863,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     container.className = 'card-container';
 
     var row = document.createElement('div');
-    row.className = 'card-row' + (cs.have?' have':'') + (cs.chase?' chasing':'');
+    row.className = 'card-row' + (cs.have?' have':'') + (cs.chase?' chasing':'') + (cs.incoming && !cs.have ? ' incoming-dim':'');
 
     row.appendChild(makeThumb(setKey, type, card, cs));
 
@@ -1742,7 +1871,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     mainDiv.className = 'card-main';
     mainDiv.innerHTML =
       '<div class="card-num">'+ (opts.showSetTag ? '<span class="set-tag">'+SET_LABELS[setKey]+' · '+type+'</span>' : '') + '#'+disp.num+(hasOverride(setKey,type,card._id) ? '<span class="edited-flag" title="Edited from the original checklist">'+T('edited')+'</span>' : '')+'</div>'+
-      '<div class="card-name">'+disp.name+ (disp.rc?'<span class="rc-badge">RC</span>':'') +'</div>'+
+      '<div class="card-name">'+disp.name+ (disp.rc?'<span class="rc-badge">RC</span>':'') + (cs.incoming && !cs.have ? '<span class="incoming-badge">'+T('incomingBadge')+'</span>' : '') +'</div>'+
       '<div class="card-team">'+disp.team+'</div>';
     row.appendChild(mainDiv);
 
@@ -1774,6 +1903,19 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       renderAll();
     });
     actions.appendChild(chaseBtn);
+
+    // incoming (on the way) button
+    var incomingBtn = document.createElement('button');
+    incomingBtn.className = 'incoming-btn' + (cs.incoming ? ' on':'');
+    incomingBtn.title = cs.incoming ? T('incomingRemove') : T('incomingAdd');
+    incomingBtn.innerHTML = svgPackage(cs.incoming);
+    incomingBtn.addEventListener('click', function(e){
+      e.stopPropagation();
+      cs.incoming = !cs.incoming;
+      toast(cs.incoming ? T('incomingAddedToast') : T('incomingRemovedToast'));
+      renderAll();
+    });
+    actions.appendChild(incomingBtn);
 
     // qty stepper (only meaningful once have)
     var stepper = document.createElement('div');
@@ -1932,6 +2074,17 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 
   function renderChaseTab(){
     var wrap = document.createElement('div');
+    var filterRow = document.createElement('div');
+    filterRow.className = 'filter-toggle-row';
+    var filterBtn = document.createElement('button');
+    filterBtn.className = 'filter-toggle-btn' + (incomingFilterOn ? ' on':'');
+    filterBtn.innerHTML = '<span>'+T('incomingFilterLabel')+'</span>';
+    filterBtn.addEventListener('click', function(){
+      incomingFilterOn = !incomingFilterOn;
+      renderAll();
+    });
+    filterRow.appendChild(filterBtn);
+    wrap.appendChild(filterRow);
     if(countChase() > 0){
       var shareBtn = document.createElement('button');
       shareBtn.className = 'share-flyer-btn';
@@ -1948,12 +2101,12 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
         var rows = [];
         list.forEach(function(card){
           var cs = getCardState(setKey, type, card._id);
-          if(cs && cs.chase){
+          if(cs && cs.chase && (!incomingFilterOn || cs.incoming)){
             rows.push(makeCardRow(setKey, type, card, {showSetTag:true}));
           }
           if(cs && cs.parallels){
             Object.keys(cs.parallels).forEach(function(pname){
-              if(cs.parallels[pname].chase){
+              if(cs.parallels[pname].chase && (!incomingFilterOn || cs.parallels[pname].incoming)){
                 rows.push(makeParallelRow(setKey, type, card, pname, {showCardInfo:true}));
               }
             });
@@ -1978,7 +2131,13 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       if(setHasAny) wrap.appendChild(setBlock);
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎯</div><h4>'+T('chaseEmptyTitle')+'</h4><p>'+T('chaseEmptyDesc')+'</p></div>';
+      if(incomingFilterOn){
+        var emptyDiv = document.createElement('div');
+        emptyDiv.innerHTML = '<div class="empty-state"><div class="glyph">📦</div><h4>'+T('incomingFilterEmptyTitle')+'</h4><p>'+T('incomingFilterEmptyDesc')+'</p></div>';
+        wrap.appendChild(emptyDiv);
+      } else {
+        wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎯</div><h4>'+T('chaseEmptyTitle')+'</h4><p>'+T('chaseEmptyDesc')+'</p></div>';
+      }
     }
     return wrap;
   }
@@ -2047,6 +2206,17 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
 
   function renderMissingTab(){
     var wrap = document.createElement('div');
+    var filterRow = document.createElement('div');
+    filterRow.className = 'filter-toggle-row';
+    var filterBtn = document.createElement('button');
+    filterBtn.className = 'filter-toggle-btn' + (incomingFilterOn ? ' on':'');
+    filterBtn.innerHTML = '<span>'+T('incomingFilterLabel')+'</span>';
+    filterBtn.addEventListener('click', function(){
+      incomingFilterOn = !incomingFilterOn;
+      renderAll();
+    });
+    filterRow.appendChild(filterBtn);
+    wrap.appendChild(filterRow);
     var found = false;
     SET_ORDER.forEach(function(setKey){
       var setHasAny = false;
@@ -2057,7 +2227,9 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
         list.forEach(function(card){
           var cs = getCardState(setKey, type, card._id);
           if(!cs || !cs.have){
-            rows.push(makeCardRow(setKey, type, card, {hideParallels:true}));
+            if(!incomingFilterOn || (cs && cs.incoming)){
+              rows.push(makeCardRow(setKey, type, card, {hideParallels:true}));
+            }
           }
         });
         if(rows.length){
@@ -2085,7 +2257,13 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       }
     });
     if(!found){
-      wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎉</div><h4>'+T('missingEmptyTitle')+'</h4><p>'+T('missingEmptyDesc')+'</p></div>';
+      if(incomingFilterOn){
+        var emptyDiv = document.createElement('div');
+        emptyDiv.innerHTML = '<div class="empty-state"><div class="glyph">📦</div><h4>'+T('incomingFilterEmptyTitle')+'</h4><p>'+T('incomingFilterEmptyDesc')+'</p></div>';
+        wrap.appendChild(emptyDiv);
+      } else {
+        wrap.innerHTML = '<div class="empty-state"><div class="glyph">🎉</div><h4>'+T('missingEmptyTitle')+'</h4><p>'+T('missingEmptyDesc')+'</p></div>';
+      }
     }
     return wrap;
   }
@@ -2266,6 +2444,7 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   // ---------- init ----------
   loadState();
   applyStaticI18n();
+  initInAppBrowserBanner();
   renderAll();
 })();
   // ---------- Install button (native install prompt) ----------
