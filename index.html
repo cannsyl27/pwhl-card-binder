@@ -513,6 +513,13 @@
   .modal .sub{ margin:0 0 18px; font-size:13px; color:var(--muted); }
   .modal-section{ margin-bottom: 18px; }
   .modal-section h4{ margin:0 0 8px; font-size:13px; color:var(--navy); text-transform:uppercase; letter-spacing:0.4px; }
+  .howto-item{ border-bottom:1px solid #eef0f7; padding-bottom:14px; }
+  .howto-item:last-child{ border-bottom:none; padding-bottom:0; }
+  .howto-item h4{
+    text-transform:none; letter-spacing:0; font-size:14.5px; font-weight:800;
+    display:flex; align-items:center; gap:7px; margin-bottom:5px;
+  }
+  .howto-desc{ margin:0; font-size:13px; color:var(--muted); line-height:1.5; }
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     padding: 11px 16px; border-radius:10px; border:none; cursor:pointer;
@@ -667,6 +674,7 @@
     </div>
     <div class="header-actions">
       <button class="header-btn" id="installBtn" style="display:none;">📲 Install App</button>
+      <button class="header-btn header-btn-outline" id="howToBtn">❓ How To</button>
       <button class="header-btn header-btn-outline" id="feedbackBtn">💬 Feedback</button>
     </div>
     <p class="install-note" id="installNote" style="display:none;">If Android shows a "Play Protect" warning when installing, tap "More details" → "Install anyway" — that's a normal browser quirk, not a problem with the app.</p>
@@ -710,6 +718,15 @@
       <h4>Danger zone</h4>
       <button class="btn btn-danger-outline" id="resetBtn">Clear all data</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="howToOverlay">
+  <div class="modal modal-wrap">
+    <button class="modal-close" id="closeHowTo">✕</button>
+    <h2 id="howToHeading">How everything works</h2>
+    <p class="sub" id="howToSub">A quick tour of every icon and button in the app.</p>
+    <div id="howToBody"><!-- populated by JS so it stays translatable --></div>
   </div>
 </div>
 
@@ -820,7 +837,38 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       inAppBrowserTitle: "⚠️ Heads up: you're inside the Facebook app",
       inAppBrowserBody: "Facebook's built-in browser blocks downloads and app installs, so \"Install App\" and \"Download my collection\" won't work here. Tap the ⋮ (or ···) menu at the top of this screen and choose \"Open in Chrome\" (or \"Open in Browser\") to use everything properly.",
       copyAppLink: "📋 Copy this link instead",
-      copyAppLinkToast: "Link copied — paste it into Chrome or Safari"
+      copyAppLinkToast: "Link copied — paste it into Chrome or Safari",
+      howToBtn: "❓ How To",
+      howToHeading: "How everything works",
+      howToSub: "A quick tour of every icon and button in the app.",
+      ht_have_t: "Checking off a card",
+      ht_have_d: "Tap anywhere on a card to mark it as owned. It turns green and counts toward your overall progress at the top.",
+      ht_qty_t: "Quantities",
+      ht_qty_d: "Use the +/− stepper to log how many copies you own. Once you're at 2 or more, that copy shows up automatically in the Doubles tab.",
+      ht_chase_t: "Chase list",
+      ht_chase_d: "Tap the star on any card or parallel to add it to your Chase list — the specific cards you're actively hunting for.",
+      ht_incoming_t: "\"On the way\"",
+      ht_incoming_d: "Bought something but it hasn't arrived yet? Tap the package icon to mark it On the way. It greys out in the Missing and Chase tabs so you don't buy it twice — use the \"📦 Incoming only\" toggle at the top of those tabs to see just those.",
+      ht_parallels_t: "Parallels",
+      ht_parallels_d: "Tap \"Parallels\" under a card to expand it and track every colored or numbered version separately (Gold, Red, Outburst, and so on).",
+      ht_edit_t: "Fixing a card",
+      ht_edit_d: "Tap the pencil icon if a name, number, or team is wrong. Your fix is saved and flagged as \"edited\" — you can reset it back to the original checklist any time.",
+      ht_photo_t: "Adding a photo",
+      ht_photo_d: "Tap a card's thumbnail to attach a picture of your actual card from your camera or photo library.",
+      ht_search_t: "Search",
+      ht_search_d: "The search bar at the top looks across every set at once — try a player's last name, a card number, or a team.",
+      ht_specialtabs_t: "The Chase / Doubles / Missing tabs",
+      ht_specialtabs_d: "These three tabs pull together everything you're chasing, every extra copy you own, and everything you still need, across all sets in one place.",
+      ht_fullextra_t: "\"Full extra sets of these\"",
+      ht_fullextra_d: "On the Doubles tab, use this button on a section header to log a whole extra set at once, instead of tapping the stepper on every single card.",
+      ht_share_t: "Sharing to Facebook",
+      ht_share_d: "From the Chase or Doubles tab, build an image of the cards you want to trade or are looking for, then save or share it straight to Facebook Marketplace or a trading group.",
+      ht_backup_t: "Backup & restore",
+      ht_backup_d: "In Settings, download a backup of your whole collection as a file, and upload it again any time you switch browsers or devices — otherwise your data only lives in this one browser.",
+      ht_lang_t: "EN / FR",
+      ht_lang_d: "Tap the language pill in the header to switch the whole app between English and French.",
+      ht_install_t: "Installing the app",
+      ht_install_d: "Tap \"Install App\" to add this to your home screen like a real app — no app store needed."
     },
     fr: {
       loading: "Chargement de votre collection…",
@@ -891,12 +939,59 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
       inAppBrowserTitle: "⚠️ Attention : vous êtes dans l'appli Facebook",
       inAppBrowserBody: "Le navigateur intégré de Facebook bloque les téléchargements et l'installation d'applis, donc « Installer l'appli » et « Télécharger ma collection » ne fonctionneront pas ici. Touchez le menu ⋮ (ou ···) en haut de cet écran et choisissez « Ouvrir dans Chrome » (ou « Ouvrir dans le navigateur ») pour tout utiliser correctement.",
       copyAppLink: "📋 Copier ce lien à la place",
-      copyAppLinkToast: "Lien copié — collez-le dans Chrome ou Safari"
+      copyAppLinkToast: "Lien copié — collez-le dans Chrome ou Safari",
+      howToBtn: "❓ Guide",
+      howToHeading: "Comment tout fonctionne",
+      howToSub: "Un tour rapide de chaque icône et bouton de l'appli.",
+      ht_have_t: "Cocher une carte",
+      ht_have_d: "Touchez n'importe où sur une carte pour la marquer comme possédée. Elle devient verte et compte dans votre progression globale en haut.",
+      ht_qty_t: "Quantités",
+      ht_qty_d: "Utilisez le bouton +/− pour noter combien de copies vous possédez. Dès que vous en avez 2 ou plus, cette copie apparaît automatiquement dans l'onglet Doubles.",
+      ht_chase_t: "Liste de recherche",
+      ht_chase_d: "Touchez l'étoile sur une carte ou une parallèle pour l'ajouter à votre liste de recherche — les cartes précises que vous recherchez activement.",
+      ht_incoming_t: "« En route »",
+      ht_incoming_d: "Vous avez acheté quelque chose mais ce n'est pas encore arrivé ? Touchez l'icône de colis pour la marquer En route. Elle s'affiche en gris dans les onglets Manquantes et Recherche pour éviter de l'acheter deux fois — utilisez le bouton « 📦 En route seulement » en haut de ces onglets pour ne voir que celles-là.",
+      ht_parallels_t: "Parallèles",
+      ht_parallels_d: "Touchez « Parallèles » sous une carte pour la déplier et suivre chaque version colorée ou numérotée séparément (Or, Rouge, Outburst, etc.).",
+      ht_edit_t: "Corriger une carte",
+      ht_edit_d: "Touchez l'icône crayon si un nom, un numéro ou une équipe est incorrect. Votre correction est enregistrée et marquée « modifié » — vous pouvez la réinitialiser à l'original à tout moment.",
+      ht_photo_t: "Ajouter une photo",
+      ht_photo_d: "Touchez la vignette d'une carte pour joindre une photo de votre carte réelle depuis votre appareil photo ou votre galerie.",
+      ht_search_t: "Recherche",
+      ht_search_d: "La barre de recherche en haut cherche dans tous les sets à la fois — essayez le nom de famille d'une joueuse, un numéro de carte ou une équipe.",
+      ht_specialtabs_t: "Les onglets Recherche / Doubles / Manquantes",
+      ht_specialtabs_d: "Ces trois onglets regroupent tout ce que vous recherchez, chaque copie supplémentaire que vous possédez et tout ce qu'il vous manque, à travers tous les sets, au même endroit.",
+      ht_fullextra_t: "« Sets complets supplémentaires de celles-ci »",
+      ht_fullextra_d: "Dans l'onglet Doubles, utilisez ce bouton sur l'en-tête d'une section pour noter un set complet supplémentaire en une fois, plutôt que de toucher le bouton sur chaque carte individuellement.",
+      ht_share_t: "Partager sur Facebook",
+      ht_share_d: "Depuis l'onglet Recherche ou Doubles, créez une image des cartes que vous voulez échanger ou que vous recherchez, puis enregistrez-la ou partagez-la directement sur Facebook Marketplace ou un groupe d'échange.",
+      ht_backup_t: "Sauvegarde et restauration",
+      ht_backup_d: "Dans les Paramètres, téléchargez une sauvegarde de toute votre collection sous forme de fichier, et importez-la à nouveau chaque fois que vous changez de navigateur ou d'appareil — sinon vos données ne vivent que dans ce navigateur.",
+      ht_lang_t: "EN / FR",
+      ht_lang_d: "Touchez la pastille de langue dans l'en-tête pour passer toute l'appli de l'anglais au français.",
+      ht_install_t: "Installer l'appli",
+      ht_install_d: "Touchez « Installer l'appli » pour l'ajouter à votre écran d'accueil comme une vraie appli — aucun magasin d'applis requis."
     }
   };
   function T(key){
     return (I18N[LANG] && I18N[LANG][key] !== undefined) ? I18N[LANG][key] : (I18N.en[key] !== undefined ? I18N.en[key] : key);
   }
+  var HOWTO_ITEMS = [
+    {icon:'🏒', t:'ht_have_t', d:'ht_have_d'},
+    {icon:'🔢', t:'ht_qty_t', d:'ht_qty_d'},
+    {icon:'⭐', t:'ht_chase_t', d:'ht_chase_d'},
+    {icon:'📦', t:'ht_incoming_t', d:'ht_incoming_d'},
+    {icon:'🎨', t:'ht_parallels_t', d:'ht_parallels_d'},
+    {icon:'✏️', t:'ht_edit_t', d:'ht_edit_d'},
+    {icon:'📷', t:'ht_photo_t', d:'ht_photo_d'},
+    {icon:'🔎', t:'ht_search_t', d:'ht_search_d'},
+    {icon:'🎯', t:'ht_specialtabs_t', d:'ht_specialtabs_d'},
+    {icon:'🔁', t:'ht_fullextra_t', d:'ht_fullextra_d'},
+    {icon:'📤', t:'ht_share_t', d:'ht_share_d'},
+    {icon:'💾', t:'ht_backup_t', d:'ht_backup_d'},
+    {icon:'🌐', t:'ht_lang_t', d:'ht_lang_d'},
+    {icon:'📲', t:'ht_install_t', d:'ht_install_d'}
+  ];
   function applyStaticI18n(){
     document.documentElement.lang = LANG;
     var langBtn = document.getElementById('langBtn');
@@ -934,6 +1029,15 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
     if((el = document.getElementById('inAppBrowserTitle'))) el.textContent = T('inAppBrowserTitle');
     if((el = document.getElementById('inAppBrowserBody'))) el.textContent = T('inAppBrowserBody');
     if((el = document.getElementById('copyAppLinkBtn'))) el.textContent = T('copyAppLink');
+    if((el = document.getElementById('howToBtn'))) el.textContent = T('howToBtn');
+    if((el = document.getElementById('howToHeading'))) el.textContent = T('howToHeading');
+    if((el = document.getElementById('howToSub'))) el.textContent = T('howToSub');
+    var howToBody = document.getElementById('howToBody');
+    if(howToBody){
+      howToBody.innerHTML = HOWTO_ITEMS.map(function(item){
+        return '<div class="modal-section howto-item"><h4>'+item.icon+' '+T(item.t)+'</h4><p class="howto-desc">'+T(item.d)+'</p></div>';
+      }).join('');
+    }
   }
 
   function isInAppBrowser(){
@@ -2371,6 +2475,18 @@ const PWHL_PARALLELS = {"UD2024":{"Base":["Deluxe /250","Exclusives /100","High 
   });
   overlay.addEventListener('click', function(e){
     if(e.target === overlay) overlay.classList.remove('open');
+  });
+
+  // ---------- How To modal ----------
+  var howToOverlay = document.getElementById('howToOverlay');
+  document.getElementById('howToBtn').addEventListener('click', function(){
+    howToOverlay.classList.add('open');
+  });
+  document.getElementById('closeHowTo').addEventListener('click', function(){
+    howToOverlay.classList.remove('open');
+  });
+  howToOverlay.addEventListener('click', function(e){
+    if(e.target === howToOverlay) howToOverlay.classList.remove('open');
   });
 
   document.getElementById('exportBtn').addEventListener('click', function(){
