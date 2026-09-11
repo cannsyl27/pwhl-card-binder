@@ -185,6 +185,18 @@
     color:#6b4c05; font-weight:700; font-size:12px; padding:5px 10px;
     border-radius:7px; cursor:pointer;
   }
+  .backup-reminder-banner{
+    background:var(--ice-2); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin:0 14px 10px; font-size:12.5px; color:var(--navy);
+    line-height:1.45;
+  }
+  .backup-reminder-banner strong{ display:block; margin-bottom:3px; }
+  .backup-reminder-actions{ display:flex; gap:8px; margin-top:8px; }
+  .backup-reminder-actions button{
+    font-size:12px; font-weight:700; padding:5px 10px; border-radius:7px; cursor:pointer;
+  }
+  .backup-reminder-actions .backup-now-btn{ background:var(--violet); color:#fff; border:1px solid var(--violet); }
+  .backup-reminder-actions .backup-later-btn{ background:#fff; color:var(--muted); border:1px solid var(--line); }
   .select-actions-row{ display:flex; gap:10px; margin:12px 0 0; }
   .select-actions-row .btn{ flex:1; }
   .select-item-row{
@@ -612,6 +624,67 @@
     padding:10px 12px; line-height:1.5;
   }
 
+  /* ---------- Box Scanner ---------- */
+  .scanner-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .scanner-row select{
+    flex:1; min-width:0; padding:10px 10px; border-radius:10px; border:1.5px solid var(--line);
+    font-size:13.5px; color:var(--ink); background:white;
+  }
+  .scanner-viewport{
+    position:relative; width:100%; aspect-ratio: 4/3; background:#0b1224;
+    border-radius:14px; overflow:hidden; margin-bottom:12px;
+  }
+  .scanner-viewport video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .scanner-guide{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:62%; aspect-ratio: 2.5/3.5;
+    border:2px dashed rgba(255,255,255,0.75); border-radius:10px;
+    pointer-events:none;
+  }
+  .scanner-idle{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#c9d3e6; font-size:13px; text-align:center; padding:20px;
+  }
+  .scanner-controls{ display:flex; gap:8px; margin-bottom:12px; }
+  .scanner-controls .btn{ width:auto; flex:1; }
+  .scanner-capture-btn{
+    width:64px; height:64px; border-radius:50%; border:4px solid white;
+    background:var(--violet); box-shadow:0 2px 10px rgba(0,0,0,0.25);
+    cursor:pointer; flex:0 0 auto; margin:0 auto 12px; display:block;
+  }
+  .scanner-capture-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+  .scanner-auto-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-size:13px; color:var(--navy); margin-bottom:12px;
+  }
+  .scanner-counts{
+    font-size:12.5px; color:var(--muted); background:var(--ice-2); border-radius:10px;
+    padding:9px 11px; margin-bottom:12px; line-height:1.5;
+  }
+  .scanner-counts b{ color:var(--navy); }
+  .scanner-warning{
+    font-size:12.5px; color:#8a5a10; background:#fff6e6; border:1px solid #f0d9a8;
+    border-radius:10px; padding:9px 11px; margin-bottom:12px; line-height:1.5;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:8px;
+  }
+  .scanner-warning .copy-link-btn{ margin-top:0; flex:0 0 auto; }
+  .scanner-error{
+    font-size:12.5px; color:#b5342a; background:#fdf2f2; border:1px solid #f3c9c9;
+    border-radius:10px; padding:9px 11px; margin-bottom:12px; line-height:1.5; display:none;
+  }
+  .switch{ position:relative; display:inline-block; width:42px; height:24px; flex:0 0 auto; }
+  .switch input{ opacity:0; width:0; height:0; }
+  .switch-track{
+    position:absolute; inset:0; background:var(--line); border-radius:999px; cursor:pointer;
+    transition:background .15s ease;
+  }
+  .switch-track:before{
+    content:''; position:absolute; width:18px; height:18px; left:3px; top:3px;
+    background:white; border-radius:50%; transition:transform .15s ease;
+  }
+  .switch input:checked + .switch-track{ background:var(--violet); }
+  .switch input:checked + .switch-track:before{ transform:translateX(18px); }
+
   /* ---------- Parallels ---------- */
   .has-parallels-flag{
     font-size: 9.5px; font-weight:700; color: var(--violet);
@@ -704,6 +777,8 @@
 </style>
 <!-- GoatCounter analytics -->
 <script data-goatcounter="https://pwhlcardtracker.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<!-- JSZip: used only by the Box Scanner to package scanned photos into a downloadable .zip -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -711,6 +786,14 @@
     <strong id="inAppBrowserTitle"></strong>
     <span id="inAppBrowserBody"></span>
     <button class="copy-link-btn" id="copyAppLinkBtn"></button>
+  </div>
+  <div class="backup-reminder-banner" id="backupReminderBanner" style="display:none;">
+    <strong id="backupReminderTitle"></strong>
+    <span id="backupReminderBody"></span>
+    <div class="backup-reminder-actions">
+      <button class="backup-now-btn" id="backupReminderNowBtn"></button>
+      <button class="backup-later-btn" id="backupReminderLaterBtn"></button>
+    </div>
   </div>
   <header class="topbar">
     <div class="topbar-row">
@@ -760,14 +843,19 @@
     <p class="sub">Your collection auto-saves to this browser. Download a backup too, since browser storage can get cleared and doesn't travel between browsers or devices.</p>
 
     <div class="modal-section">
-      <h4>Backup</h4>
+      <h4 id="settingsBackupHeading">Backup</h4>
       <button class="btn btn-primary" id="exportBtn">⬇ Download my collection (JSON)</button>
     </div>
 
     <div class="modal-section">
-      <h4>Restore</h4>
+      <h4 id="settingsRestoreHeading">Restore</h4>
       <button class="btn btn-outline" id="importBtn">⬆ Upload a collection file</button>
       <input type="file" id="importFile" class="file-input-hidden" accept="application/json">
+    </div>
+
+    <div class="modal-section">
+      <h4 id="settingsScannerHeading">Box Scanner</h4>
+      <button class="btn btn-outline" id="openScannerBtn">📷 Scan a stack of cards</button>
     </div>
 
     <div class="modal-section">
@@ -777,7 +865,7 @@
     </div>
 
     <div class="modal-section">
-      <h4>Danger zone</h4>
+      <h4 id="settingsDangerHeading">Danger zone</h4>
       <button class="btn btn-danger-outline" id="resetBtn">Clear all data</button>
     </div>
   </div>
@@ -798,6 +886,56 @@
     <h2 id="setsPickerHeading">Sets</h2>
     <input type="text" id="setsPickerFilter" class="sets-picker-filter" placeholder="Filter releases…">
     <div id="setsPickerBody"><!-- populated by JS --></div>
+  </div>
+</div>
+
+<div class="overlay" id="scannerOverlay">
+  <div class="modal modal-wrap">
+    <button class="modal-close" id="closeScanner">✕</button>
+    <h2 id="scannerHeading">Box Scanner</h2>
+    <p class="sub" id="scannerSub">Scan a stack of cards, then download them as a .zip sorted into folders. This doesn't check any cards off — you'll match photos to cards yourself afterward.</p>
+
+    <div class="scanner-row">
+      <select id="scannerReleaseSelect"></select>
+      <select id="scannerTypeSelect"></select>
+    </div>
+
+    <div class="scanner-warning" id="scannerInAppWarning" style="display:none;"></div>
+    <div class="scanner-error" id="scannerError"></div>
+
+    <div class="scanner-viewport" id="scannerViewport">
+      <video id="scannerVideo" autoplay playsinline muted></video>
+      <div class="scanner-guide" id="scannerGuide" style="display:none;"></div>
+      <div class="scanner-idle" id="scannerIdle">Tap "Start camera" below to begin scanning.</div>
+    </div>
+
+    <div class="scanner-controls">
+      <button class="btn btn-primary" id="scannerStartBtn">🎥 Start camera</button>
+      <button class="btn btn-outline" id="scannerStopBtn" style="display:none;">Stop camera</button>
+    </div>
+
+    <button class="scanner-capture-btn" id="scannerCaptureBtn" disabled title="Capture"></button>
+
+    <div class="scanner-auto-row">
+      <span id="scannerAutoLabel">Auto-capture every few seconds</span>
+      <label class="switch">
+        <input type="checkbox" id="scannerAutoToggle">
+        <span class="switch-track"></span>
+      </label>
+    </div>
+
+    <div class="scanner-counts" id="scannerCounts"></div>
+    <div class="scanner-warning" id="scannerMemoryWarning" style="display:none;">
+      <span id="scannerMemoryWarningText"></span>
+      <button class="copy-link-btn" id="scannerMemoryWarningDismiss">✕</button>
+    </div>
+
+    <div class="scanner-controls">
+      <button class="btn btn-primary" id="scannerDownloadBtn">⬇ Download scans (.zip)</button>
+    </div>
+    <div class="scanner-controls">
+      <button class="btn btn-danger-outline" id="scannerClearBtn">Clear scanned photos</button>
+    </div>
   </div>
 </div>
 
@@ -917,6 +1055,13 @@ var PWHL_PARALLELS = {};
       inAppBrowserBody: "Facebook's built-in browser blocks downloads and app installs, so \"Install App\" and \"Download my collection\" won't work here. Tap the ⋮ (or ···) menu at the top of this screen and choose \"Open in Chrome\" (or \"Open in Browser\") to use everything properly.",
       copyAppLink: "📋 Copy this link instead",
       copyAppLinkToast: "Link copied — paste it into Chrome or Safari",
+      backupReminderTitle: "📦 Back up your collection",
+      backupReminderBodyWelcome: "Quick heads up as you get started: your collection lives only on this device. Get in the habit of downloading a backup now and then, from Settings, so a lost phone or cleared browser data can't erase your progress.",
+      backupReminderBodyFirstTime: "You've been tracking your collection here for a couple weeks. Everything's saved on this device, but nothing leaves it automatically — download a quick backup just in case.",
+      backupReminderBodyRepeat: "It's been a while since your last backup. Download a fresh one so a lost phone or cleared browser data can't wipe out your progress.",
+      backupReminderNow: "⬇ Download backup",
+      backupReminderLater: "Remind me later",
+      backupReminderSnoozedToast: "Okay — we'll remind you again later",
       howToBtn: "❓ How To",
       howToHeading: "How everything works",
       howToSub: "A quick tour of every icon and button in the app.",
@@ -954,6 +1099,8 @@ var PWHL_PARALLELS = {};
       ht_collapse_d: "Tap any section header (like \"Base\" or \"Young Guns\") to collapse or expand just that list — or use the \"Collapse all / Expand all\" button at the top of a set tab to do it for the whole page at once.",
       ht_setspicker_t: "Finding a release",
       ht_setspicker_d: "Tap the \"📚 [release name]\" button to open a searchable list of every release, grouped by Flagship, Showcase, and Specialty. Pick one to jump straight to it — no more scrolling through a long row of tabs.",
+      ht_scanner_t: "Box Scanner",
+      ht_scanner_d: "In Settings, use the Box Scanner to photograph a whole stack of cards with your camera, then download them all as a .zip sorted by release and subset. It doesn't attach photos to individual cards for you — you'll sort and attach them yourself afterward.",
       setsPickerHeading: "Sets",
       setsPickerFilterPlaceholder: "Filter releases…",
       groupFlagship: "Flagship",
@@ -965,7 +1112,33 @@ var PWHL_PARALLELS = {};
       loadingReleaseDesc: "Just a moment — fetching its checklist.",
       emptyReleaseTitle: "No cards yet",
       emptyReleaseDesc: "This release doesn't have any cards added yet. Send them over any time and they'll go straight in.",
-      loadingMoreNote: "⏳ Still loading other releases in the background — totals below will keep filling in."
+      loadingMoreNote: "⏳ Still loading other releases in the background — totals below will keep filling in.",
+      scannerSectionHeading: "Box Scanner",
+      openScannerBtn: "📷 Scan a stack of cards",
+      scannerHeading: "Box Scanner",
+      scannerSub: "Scan a stack of cards, then download them as a .zip sorted into folders. This doesn't check any cards off — you'll match photos to cards yourself afterward.",
+      scannerReleaseUnselected: "Choose a release…",
+      scannerTypeUnselected: "Choose a subset…",
+      scannerTypeLoading: "Loading subsets…",
+      scannerStartBtn: "🎥 Start camera",
+      scannerStopBtn: "Stop camera",
+      scannerIdleHint: "Tap \"Start camera\" below to begin scanning.",
+      scannerAutoLabel: "Auto-capture every few seconds",
+      scannerDownloadBtn: "⬇ Download scans (.zip)",
+      scannerClearBtn: "Clear scanned photos",
+      scannerClearConfirm: "Discard all scanned photos in this session? This can't be undone, and nothing has been downloaded yet.",
+      scannerCountsLine: "{count} scanned to {folder} · {total} total this session",
+      scannerCountsEmpty: "No photos scanned yet this session.",
+      scannerPickBothToast: "Pick a release and a subset first",
+      scannerCameraErrorGeneric: "Couldn't access the camera. Check that this site has camera permission in your browser settings.",
+      scannerCameraErrorDenied: "Camera access was denied. Allow camera access for this site, then tap \"Start camera\" again.",
+      scannerCameraErrorNoCamera: "No camera was found on this device.",
+      scannerInAppWarning: "⚠️ In-app browsers (like the Facebook or Instagram browser) often block camera access. If the camera won't start, open this page in Chrome or Safari instead.",
+      scannerCapturedToast: "Photo scanned",
+      scannerNoScansToast: "No scans to download yet",
+      scannerClearedToast: "Scanned photos cleared",
+      scannerZipErrorToast: "Couldn't build the .zip — try again",
+      scannerMemoryWarning: "{count} photos scanned this session — they're all held in your phone's memory until you download. Consider downloading now before scanning more."
     },
     fr: {
       loading: "Chargement de votre collection…",
@@ -1042,6 +1215,13 @@ var PWHL_PARALLELS = {};
       inAppBrowserBody: "Le navigateur intégré de Facebook bloque les téléchargements et l'installation d'applis, donc « Installer l'appli » et « Télécharger ma collection » ne fonctionneront pas ici. Touchez le menu ⋮ (ou ···) en haut de cet écran et choisissez « Ouvrir dans Chrome » (ou « Ouvrir dans le navigateur ») pour tout utiliser correctement.",
       copyAppLink: "📋 Copier ce lien à la place",
       copyAppLinkToast: "Lien copié — collez-le dans Chrome ou Safari",
+      backupReminderTitle: "📦 Sauvegardez votre collection",
+      backupReminderBodyWelcome: "Petit conseil pour commencer : votre collection vit uniquement sur cet appareil. Prenez l'habitude de télécharger une sauvegarde de temps en temps depuis les Paramètres, pour qu'un téléphone perdu ou des données effacées ne puissent pas effacer votre progression.",
+      backupReminderBodyFirstTime: "Vous suivez votre collection ici depuis quelques semaines. Tout est enregistré sur cet appareil, mais rien n'en sort automatiquement — téléchargez une sauvegarde rapide au cas où.",
+      backupReminderBodyRepeat: "Cela fait un moment depuis votre dernière sauvegarde. Téléchargez-en une nouvelle pour qu'un téléphone perdu ou des données de navigateur effacées ne puissent pas effacer votre progression.",
+      backupReminderNow: "⬇ Télécharger la sauvegarde",
+      backupReminderLater: "Me le rappeler plus tard",
+      backupReminderSnoozedToast: "D'accord — nous vous le rappellerons plus tard",
       howToBtn: "❓ Guide",
       howToHeading: "Comment tout fonctionne",
       howToSub: "Un tour rapide de chaque icône et bouton de l'appli.",
@@ -1079,6 +1259,8 @@ var PWHL_PARALLELS = {};
       ht_collapse_d: "Touchez l'en-tête d'une section (comme « Base » ou « Young Guns ») pour réduire ou développer juste cette liste — ou utilisez le bouton « Tout réduire / Tout développer » en haut d'un onglet de set pour le faire pour toute la page en une fois.",
       ht_setspicker_t: "Trouver une édition",
       ht_setspicker_d: "Touchez le bouton « 📚 [nom de l'édition] » pour ouvrir une liste consultable de toutes les éditions, groupées par Phare, Showcase et Spécialité. Choisissez-en une pour y aller directement — plus besoin de faire défiler une longue rangée d'onglets.",
+      ht_scanner_t: "Scanner de cartes",
+      ht_scanner_d: "Dans les Paramètres, utilisez le Scanner de cartes pour photographier toute une pile de cartes avec votre caméra, puis téléchargez-les sous forme de .zip trié par édition et sous-ensemble. Il n'associe pas les photos aux cartes individuelles pour vous — vous les trierez et les associerez vous-même ensuite.",
       setsPickerHeading: "Sets",
       setsPickerFilterPlaceholder: "Filtrer les éditions…",
       groupFlagship: "Phare",
@@ -1090,7 +1272,33 @@ var PWHL_PARALLELS = {};
       loadingReleaseDesc: "Un instant — récupération de sa liste de cartes.",
       emptyReleaseTitle: "Aucune carte pour l'instant",
       emptyReleaseDesc: "Cette édition n'a pas encore de cartes ajoutées. Envoyez-les quand vous voulez et elles seront ajoutées directement.",
-      loadingMoreNote: "⏳ Chargement des autres éditions en arrière-plan — les totaux ci-dessous continueront de se remplir."
+      loadingMoreNote: "⏳ Chargement des autres éditions en arrière-plan — les totaux ci-dessous continueront de se remplir.",
+      scannerSectionHeading: "Scanner de cartes",
+      openScannerBtn: "📷 Scanner une pile de cartes",
+      scannerHeading: "Scanner de cartes",
+      scannerSub: "Scannez une pile de cartes, puis téléchargez-les sous forme de fichier .zip trié en dossiers. Cela ne coche aucune carte — vous associerez les photos aux cartes vous-même ensuite.",
+      scannerReleaseUnselected: "Choisissez une édition…",
+      scannerTypeUnselected: "Choisissez un sous-ensemble…",
+      scannerTypeLoading: "Chargement des sous-ensembles…",
+      scannerStartBtn: "🎥 Démarrer la caméra",
+      scannerStopBtn: "Arrêter la caméra",
+      scannerIdleHint: "Touchez « Démarrer la caméra » ci-dessous pour commencer.",
+      scannerAutoLabel: "Capture automatique toutes les quelques secondes",
+      scannerDownloadBtn: "⬇ Télécharger les scans (.zip)",
+      scannerClearBtn: "Effacer les photos scannées",
+      scannerClearConfirm: "Supprimer toutes les photos scannées de cette session ? Cette action est irréversible, et rien n'a encore été téléchargé.",
+      scannerCountsLine: "{count} scannées dans {folder} · {total} au total cette session",
+      scannerCountsEmpty: "Aucune photo scannée pour l'instant.",
+      scannerPickBothToast: "Choisissez d'abord une édition et un sous-ensemble",
+      scannerCameraErrorGeneric: "Impossible d'accéder à la caméra. Vérifiez que ce site a la permission d'utiliser la caméra dans les réglages de votre navigateur.",
+      scannerCameraErrorDenied: "L'accès à la caméra a été refusé. Autorisez l'accès à la caméra pour ce site, puis touchez à nouveau « Démarrer la caméra ».",
+      scannerCameraErrorNoCamera: "Aucune caméra trouvée sur cet appareil.",
+      scannerInAppWarning: "⚠️ Les navigateurs intégrés (comme celui de Facebook ou Instagram) bloquent souvent l'accès à la caméra. Si la caméra ne démarre pas, ouvrez cette page dans Chrome ou Safari.",
+      scannerCapturedToast: "Photo scannée",
+      scannerNoScansToast: "Aucun scan à télécharger pour l'instant",
+      scannerClearedToast: "Photos scannées effacées",
+      scannerZipErrorToast: "Impossible de créer le .zip — réessayez",
+      scannerMemoryWarning: "{count} photos scannées cette session — elles sont toutes conservées dans la mémoire de votre téléphone jusqu'au téléchargement. Pensez à télécharger maintenant avant d'en scanner davantage."
     }
   };
   function T(key){
@@ -1112,7 +1320,8 @@ var PWHL_PARALLELS = {};
     {icon:'🌐', t:'ht_lang_t', d:'ht_lang_d'},
     {icon:'📲', t:'ht_install_t', d:'ht_install_d'},
     {icon:'🔽', t:'ht_collapse_t', d:'ht_collapse_d'},
-    {icon:'📚', t:'ht_setspicker_t', d:'ht_setspicker_d'}
+    {icon:'📚', t:'ht_setspicker_t', d:'ht_setspicker_d'},
+    {icon:'📷', t:'ht_scanner_t', d:'ht_scanner_d'}
   ];
   function applyStaticI18n(){
     document.documentElement.lang = LANG;
@@ -1133,15 +1342,18 @@ var PWHL_PARALLELS = {};
     if(settingsOverlay){
       var h2 = settingsOverlay.querySelector('h2'); if(h2) h2.textContent = T('settings');
       var sub = settingsOverlay.querySelector('p.sub'); if(sub) sub.textContent = T('settingsSub');
-      var h4s = settingsOverlay.querySelectorAll('h4');
-      if(h4s[0]) h4s[0].textContent = T('backup');
-      if(h4s[1]) h4s[1].textContent = T('restore');
-      if(h4s[2]) h4s[2].textContent = T('dangerZone');
       var storageNote = settingsOverlay.querySelector('.storage-note'); if(storageNote) storageNote.textContent = T('storageNote');
     }
+    if((el = document.getElementById('settingsBackupHeading'))) el.textContent = T('backup');
+    if((el = document.getElementById('settingsRestoreHeading'))) el.textContent = T('restore');
+    if((el = document.getElementById('settingsScannerHeading'))) el.textContent = T('scannerSectionHeading');
+    if((el = document.getElementById('settingsDangerHeading'))) el.textContent = T('dangerZone');
     if((el = document.getElementById('exportBtn'))) el.textContent = T('downloadBackup');
     if((el = document.getElementById('importBtn'))) el.textContent = T('uploadBackup');
     if((el = document.getElementById('resetBtn'))) el.textContent = T('clearAllData');
+    if((el = document.getElementById('openScannerBtn'))) el.textContent = T('openScannerBtn');
+    applyScannerI18n();
+    applyBackupReminderI18n();
     if((el = document.getElementById('shareSelectAllBtn'))) el.textContent = T('selectAll');
     if((el = document.getElementById('shareSelectNoneBtn'))) el.textContent = T('selectNone');
     if((el = document.getElementById('shareContinueBtn'))) el.textContent = T('continueBuildImage');
@@ -1191,6 +1403,268 @@ var PWHL_PARALLELS = {};
     }
   }
 
+  // ---------- Box Scanner ----------
+  // Session-only state: nothing here is saved to localStorage or the backup file.
+  // Scanned photos live in memory only until downloaded as a .zip, by design —
+  // this avoids adding to the same localStorage quota the per-card photo feature uses.
+  var scannerZip = null;
+  var scannerCounters = {};   // "releaseId|type" -> next sequence number
+  var scannerSessionTotal = 0;
+  var scannerStream = null;
+  var scannerAutoTimer = null;
+  var SCANNER_MEM_WARN_THRESHOLD = 200; // first nudge to download
+  var SCANNER_MEM_WARN_REPEAT = 100;    // then nudge again every N photos after that
+
+  function showScannerMemoryWarning(){
+    var el = document.getElementById('scannerMemoryWarning');
+    var textEl = document.getElementById('scannerMemoryWarningText');
+    if(!el || !textEl) return;
+    textEl.textContent = T('scannerMemoryWarning').replace('{count}', scannerSessionTotal);
+    el.style.display = 'flex';
+  }
+  function hideScannerMemoryWarning(){
+    var el = document.getElementById('scannerMemoryWarning');
+    if(el) el.style.display = 'none';
+  }
+  function maybeWarnAboutScannerMemory(){
+    var n = scannerSessionTotal;
+    if(n === SCANNER_MEM_WARN_THRESHOLD || (n > SCANNER_MEM_WARN_THRESHOLD && (n - SCANNER_MEM_WARN_THRESHOLD) % SCANNER_MEM_WARN_REPEAT === 0)){
+      showScannerMemoryWarning();
+    }
+  }
+
+  function sanitizeForPath(s){
+    var cleaned = String(s).trim().replace(/[\\\/\?<>:\*\|"]/g, '_');
+    return cleaned || 'Unsorted';
+  }
+  function scannerFolderKey(releaseId, type){ return releaseId + '|' + type; }
+  function scannerZipPath(releaseId, type, seq){
+    var relLabel = sanitizeForPath(SET_LABELS[releaseId] || releaseId);
+    var typeLabel = sanitizeForPath(type);
+    var num = String(seq).length >= 3 ? String(seq) : ('000' + seq).slice(-3);
+    return relLabel + '/' + typeLabel + '/' + num + '.jpg';
+  }
+  function ensureScannerZip(){
+    if(typeof JSZip === 'undefined'){ return null; }
+    if(!scannerZip){ scannerZip = new JSZip(); }
+    return scannerZip;
+  }
+
+  function populateScannerReleaseSelect(){
+    var sel = document.getElementById('scannerReleaseSelect');
+    if(!sel) return;
+    var prevVal = sel.value;
+    sel.innerHTML = '<option value="">' + T('scannerReleaseUnselected') + '</option>' +
+      RELEASES.map(function(r){ return '<option value="' + r.id + '">' + r.label + '</option>'; }).join('');
+    if(prevVal && RELEASES.some(function(r){ return r.id === prevVal; })) sel.value = prevVal;
+  }
+
+  function populateScannerTypeSelect(){
+    var relSel = document.getElementById('scannerReleaseSelect');
+    var typeSel = document.getElementById('scannerTypeSelect');
+    if(!relSel || !typeSel) return;
+    var releaseId = relSel.value;
+    if(!releaseId){
+      typeSel.innerHTML = '<option value="">' + T('scannerTypeUnselected') + '</option>';
+      typeSel.disabled = true;
+      updateScannerCaptureAvailability();
+      refreshScannerCounts();
+      return;
+    }
+    typeSel.disabled = true;
+    typeSel.innerHTML = '<option value="">' + T('scannerTypeLoading') + '</option>';
+    loadRelease(releaseId).then(function(){
+      // The release picker may have changed again while this fetch was in flight.
+      var currentSel = document.getElementById('scannerReleaseSelect');
+      if(!currentSel || currentSel.value !== releaseId) return;
+      var types = (PWHL_SETS[releaseId] || []).map(function(pair){ return pair[0]; });
+      typeSel.innerHTML = '<option value="">' + T('scannerTypeUnselected') + '</option>' +
+        types.map(function(t){ return '<option value="' + t.replace(/"/g,'&quot;') + '">' + t + '</option>'; }).join('');
+      typeSel.disabled = false;
+      updateScannerCaptureAvailability();
+      refreshScannerCounts();
+    });
+  }
+
+  function updateScannerCaptureAvailability(){
+    var relSel = document.getElementById('scannerReleaseSelect');
+    var typeSel = document.getElementById('scannerTypeSelect');
+    var captureBtn = document.getElementById('scannerCaptureBtn');
+    var ready = !!(relSel && typeSel && relSel.value && typeSel.value && scannerStream);
+    if(captureBtn) captureBtn.disabled = !ready;
+  }
+
+  function refreshScannerCounts(){
+    var el = document.getElementById('scannerCounts');
+    if(!el) return;
+    if(scannerSessionTotal === 0){
+      el.textContent = T('scannerCountsEmpty');
+      return;
+    }
+    var relSel = document.getElementById('scannerReleaseSelect');
+    var typeSel = document.getElementById('scannerTypeSelect');
+    var folderCount = 0, folderLabel = '—';
+    if(relSel && typeSel && relSel.value && typeSel.value){
+      var key = scannerFolderKey(relSel.value, typeSel.value);
+      folderCount = (scannerCounters[key] || 1) - 1;
+      folderLabel = (SET_LABELS[relSel.value] || relSel.value) + ' / ' + typeSel.value;
+    }
+    el.textContent = T('scannerCountsLine')
+      .replace('{count}', folderCount)
+      .replace('{folder}', folderLabel)
+      .replace('{total}', scannerSessionTotal);
+  }
+
+  function scannerShowError(msg){
+    var el = document.getElementById('scannerError');
+    if(!el) return;
+    if(!msg){ el.style.display = 'none'; el.textContent = ''; return; }
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function startScannerCamera(){
+    scannerShowError('');
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      scannerShowError(T('scannerCameraErrorGeneric'));
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      audio: false
+    }).then(function(stream){
+      scannerStream = stream;
+      var video = document.getElementById('scannerVideo');
+      if(video) video.srcObject = stream;
+      var idle = document.getElementById('scannerIdle'); if(idle) idle.style.display = 'none';
+      var guide = document.getElementById('scannerGuide'); if(guide) guide.style.display = 'block';
+      var startBtn = document.getElementById('scannerStartBtn'); if(startBtn) startBtn.style.display = 'none';
+      var stopBtn = document.getElementById('scannerStopBtn'); if(stopBtn) stopBtn.style.display = '';
+      updateScannerCaptureAvailability();
+    }).catch(function(err){
+      var name = err && err.name;
+      if(name === 'NotAllowedError' || name === 'PermissionDeniedError'){
+        scannerShowError(T('scannerCameraErrorDenied'));
+      } else if(name === 'NotFoundError' || name === 'DevicesNotFoundError'){
+        scannerShowError(T('scannerCameraErrorNoCamera'));
+      } else {
+        scannerShowError(T('scannerCameraErrorGeneric'));
+      }
+    });
+  }
+
+  function clearScannerAutoTimer(){
+    if(scannerAutoTimer){ clearInterval(scannerAutoTimer); scannerAutoTimer = null; }
+  }
+
+  function stopScannerAutoCapture(){
+    clearScannerAutoTimer();
+    var autoToggle = document.getElementById('scannerAutoToggle');
+    if(autoToggle) autoToggle.checked = false;
+  }
+
+  function stopScannerCamera(){
+    stopScannerAutoCapture();
+    if(scannerStream){
+      scannerStream.getTracks().forEach(function(t){ t.stop(); });
+      scannerStream = null;
+    }
+    var video = document.getElementById('scannerVideo'); if(video) video.srcObject = null;
+    var idle = document.getElementById('scannerIdle'); if(idle) idle.style.display = 'flex';
+    var guide = document.getElementById('scannerGuide'); if(guide) guide.style.display = 'none';
+    var startBtn = document.getElementById('scannerStartBtn'); if(startBtn) startBtn.style.display = '';
+    var stopBtn = document.getElementById('scannerStopBtn'); if(stopBtn) stopBtn.style.display = 'none';
+    updateScannerCaptureAvailability();
+  }
+
+  function captureScannerFrame(){
+    var relSel = document.getElementById('scannerReleaseSelect');
+    var typeSel = document.getElementById('scannerTypeSelect');
+    if(!relSel || !typeSel || !relSel.value || !typeSel.value){
+      toast(T('scannerPickBothToast'));
+      return;
+    }
+    var video = document.getElementById('scannerVideo');
+    if(!video || !video.videoWidth) return;
+    var zip = ensureScannerZip();
+    if(!zip) return;
+    var canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    var releaseId = relSel.value, type = typeSel.value;
+    var key = scannerFolderKey(releaseId, type);
+    if(!scannerCounters[key]) scannerCounters[key] = 1;
+    var seq = scannerCounters[key];
+    var path = scannerZipPath(releaseId, type, seq);
+    canvas.toBlob(function(blob){
+      if(!blob) return;
+      zip.file(path, blob);
+      scannerCounters[key] = seq + 1;
+      scannerSessionTotal++;
+      refreshScannerCounts();
+      maybeWarnAboutScannerMemory();
+      toast(T('scannerCapturedToast'));
+    }, 'image/jpeg', 0.9);
+  }
+
+  function toggleScannerAutoCapture(on){
+    clearScannerAutoTimer();
+    if(on && scannerStream){
+      scannerAutoTimer = setInterval(captureScannerFrame, 2500);
+    }
+  }
+
+  function downloadScannerZip(){
+    if(scannerSessionTotal === 0 || !scannerZip){
+      toast(T('scannerNoScansToast'));
+      return;
+    }
+    scannerZip.generateAsync({type:'blob'}).then(function(blob){
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'pwhl_card_scans_' + new Date().toISOString().slice(0,10) + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    }).catch(function(){
+      toast(T('scannerZipErrorToast'));
+    });
+  }
+
+  function clearScannerCaptures(){
+    if(scannerSessionTotal === 0) return;
+    if(!confirm(T('scannerClearConfirm'))) return;
+    scannerZip = null;
+    scannerCounters = {};
+    scannerSessionTotal = 0;
+    refreshScannerCounts();
+    hideScannerMemoryWarning();
+    toast(T('scannerClearedToast'));
+  }
+
+  function applyScannerI18n(){
+    var el;
+    if((el = document.getElementById('scannerHeading'))) el.textContent = T('scannerHeading');
+    if((el = document.getElementById('scannerSub'))) el.textContent = T('scannerSub');
+    if((el = document.getElementById('scannerStartBtn'))) el.textContent = T('scannerStartBtn');
+    if((el = document.getElementById('scannerStopBtn'))) el.textContent = T('scannerStopBtn');
+    if((el = document.getElementById('scannerIdle'))) el.textContent = T('scannerIdleHint');
+    if((el = document.getElementById('scannerAutoLabel'))) el.textContent = T('scannerAutoLabel');
+    if((el = document.getElementById('scannerDownloadBtn'))) el.textContent = T('scannerDownloadBtn');
+    if((el = document.getElementById('scannerClearBtn'))) el.textContent = T('scannerClearBtn');
+    if(isInAppBrowser() && (el = document.getElementById('scannerInAppWarning'))){
+      el.textContent = T('scannerInAppWarning');
+      el.style.display = 'block';
+    }
+    var relSel = document.getElementById('scannerReleaseSelect');
+    if(relSel && relSel.options.length && relSel.options[0].value === '') relSel.options[0].textContent = T('scannerReleaseUnselected');
+    var typeSel = document.getElementById('scannerTypeSelect');
+    if(typeSel && typeSel.options.length && typeSel.options[0].value === '') typeSel.options[0].textContent = T('scannerTypeUnselected');
+    refreshScannerCounts();
+  }
+
   // These four are populated once the manifest and each release's data load —
   // see the "Manifest-driven release loading" section further down.
   var RELEASES = [];       // full manifest entries, in display order
@@ -1221,37 +1695,234 @@ var PWHL_PARALLELS = {};
   var state = { cards: {}, fullDoubles: {}, overrides: {} };
   var activeTab = null; // set once the manifest loads and we know which release to show first
 
-  // ---------- Auto-save (localStorage) ----------
-  var STORAGE_KEY = 'pwhlCardBinderState_v1';
+  // ---------- Auto-save (IndexedDB) ----------
+  // Card data (including base64 photos) used to live in localStorage, which most
+  // browsers cap around 5-10MB/site. IndexedDB has no such practical limit, so
+  // everything moved here instead. Still 100% local to this browser/device —
+  // nothing is sent anywhere, same as before.
+  var STORAGE_KEY = 'pwhlCardBinderState_v1'; // unchanged, so legacy localStorage data can be found & migrated
+  var IDB_NAME = 'pwhlCardBinderDB';
+  var IDB_VERSION = 1;
+  var IDB_STORE = 'state';
   var storageAvailable = true;
+  var dbOpenPromise = null;
+
+  function openIdb(){
+    if(dbOpenPromise) return dbOpenPromise;
+    dbOpenPromise = new Promise(function(resolve, reject){
+      if(!window.indexedDB){ reject(new Error('IndexedDB unsupported')); return; }
+      var req = indexedDB.open(IDB_NAME, IDB_VERSION);
+      req.onupgradeneeded = function(){
+        var db = req.result;
+        if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      };
+      req.onsuccess = function(){ resolve(req.result); };
+      req.onerror = function(){ reject(req.error); };
+    });
+    return dbOpenPromise;
+  }
+  function idbGet(key){
+    return openIdb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(IDB_STORE, 'readonly');
+        var req = tx.objectStore(IDB_STORE).get(key);
+        req.onsuccess = function(){ resolve(req.result); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+  function idbPut(key, value){
+    return openIdb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).put(value, key);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+  function idbDelete(key){
+    return openIdb().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(IDB_STORE, 'readwrite');
+        tx.objectStore(IDB_STORE).delete(key);
+        tx.oncomplete = function(){ resolve(); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+
   function saveState(){
-    if(!storageAvailable) return;
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        cards: state.cards, fullDoubles: state.fullDoubles, overrides: state.overrides
-      }));
-    }catch(e){
-      storageAvailable = false; // private browsing / quota exceeded — fail silently, exports still work
+    if(!storageAvailable) return Promise.resolve();
+    return idbPut(STORAGE_KEY, {
+      cards: state.cards, fullDoubles: state.fullDoubles, overrides: state.overrides
+    }).catch(function(){
+      storageAvailable = false; // private browsing / IndexedDB blocked — fail silently, exports still work
+    });
+  }
+  function applyStateData(data){
+    state.cards = data.cards || {};
+    state.fullDoubles = data.fullDoubles || {};
+    state.overrides = data.overrides || {};
+    if(migrateOverridesToNotes()){
+      toast('Your old card corrections were saved as notes 📝');
     }
   }
-  function loadState(){
-    try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return false;
-      var data = JSON.parse(raw);
-      state.cards = data.cards || {};
-      state.fullDoubles = data.fullDoubles || {};
-      state.overrides = data.overrides || {};
-      if(migrateOverridesToNotes()){
-        toast('Your old card corrections were saved as notes 📝');
-      }
+  // One-time migration for anyone who used the app before the IndexedDB switch:
+  // if there's no IndexedDB record yet but there IS old localStorage data, adopt
+  // it, save it into IndexedDB, then clear the old localStorage copy.
+  function migrateLegacyLocalStorage(){
+    var raw = null;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+    if(!raw) return false;
+    var legacy;
+    try{ legacy = JSON.parse(raw); }catch(e){ return false; }
+    applyStateData(legacy);
+    return saveState().then(function(){
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      toast('Your collection was moved to bigger storage 📦');
       return true;
-    }catch(e){
+    });
+  }
+  function loadState(){
+    return idbGet(STORAGE_KEY).then(function(data){
+      if(data){ applyStateData(data); return true; }
+      return migrateLegacyLocalStorage();
+    }).catch(function(){
+      storageAvailable = false;
+      // IndexedDB unavailable outright (very old browser, some private-mode configs) —
+      // fall back to a best-effort read of legacy localStorage so existing data still shows.
+      var raw = null;
+      try{ raw = localStorage.getItem(STORAGE_KEY); }catch(e){}
+      if(raw){
+        try{ applyStateData(JSON.parse(raw)); return true; }catch(e){}
+      }
       return false;
+    });
+  }
+
+  // ---------- Persistent storage ----------
+  // Asks the browser not to auto-evict this site's IndexedDB/localStorage under
+  // storage pressure (mainly relevant to Safari, which can clear an unvisited
+  // site's local data after about a week unless it's marked persistent). This is
+  // silent and best-effort — most browsers grant it quietly, some ignore it, and
+  // there's no downside either way, so no UI is needed around it.
+  function requestPersistentStorage(){
+    try{
+      if(navigator.storage && navigator.storage.persist){
+        navigator.storage.persist();
+      }
+    }catch(e){ /* not supported — fine, just skip it */ }
+  }
+
+  // ---------- Backup reminder ----------
+  // A gentle, dismissible nudge to download a JSON backup now and then, since
+  // the collection only lives on this one device/browser. A one-time "welcome"
+  // version shows on someone's very first-ever session, regardless of whether
+  // they've entered any data yet, to set the expectation early. After that, the
+  // periodic version only shows once there's actually something to lose, and is
+  // easy to snooze rather than a nag that keeps reappearing every session.
+  var LAST_BACKUP_KEY = 'pwhl_last_backup_at';
+  var FIRST_USE_KEY = 'pwhl_first_use_at';
+  var BACKUP_SNOOZE_KEY = 'pwhl_backup_snoozed_until';
+  var BACKUP_FIRST_NUDGE_MS = 14 * 24 * 60 * 60 * 1000;  // 14 days of use before the first-ever nudge
+  var BACKUP_REPEAT_MS = 30 * 24 * 60 * 60 * 1000;       // 30 days since the last backup before nudging again
+  var BACKUP_SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;       // "remind me later" waits 14 days
+
+  function hasMeaningfulCollectionData(){
+    var cardsBySet = state.cards;
+    for(var setKey in cardsBySet){
+      var byType = cardsBySet[setKey];
+      for(var type in byType){
+        var byId = byType[type];
+        for(var id in byId){
+          var cs = byId[id];
+          if(cs.have || cs.qty > 0 || cs.img) return true;
+          if(cs.parallels){
+            for(var pname in cs.parallels){
+              var ps = cs.parallels[pname];
+              if(ps.have || ps.qty > 0) return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  function shouldShowBackupReminder(){
+    if(!hasMeaningfulCollectionData()) return false;
+    var now = Date.now();
+    var snoozedUntil = parseInt(localStorage.getItem(BACKUP_SNOOZE_KEY) || '0', 10);
+    if(now < snoozedUntil) return false;
+    var lastBackup = parseInt(localStorage.getItem(LAST_BACKUP_KEY) || '0', 10);
+    if(lastBackup) return (now - lastBackup) > BACKUP_REPEAT_MS;
+    var firstUse = parseInt(localStorage.getItem(FIRST_USE_KEY) || String(now), 10);
+    return (now - firstUse) > BACKUP_FIRST_NUDGE_MS;
+  }
+
+  function hideBackupReminderBanner(){
+    var el = document.getElementById('backupReminderBanner');
+    if(el) el.style.display = 'none';
+  }
+
+  function showBackupReminderBanner(variant){
+    var el = document.getElementById('backupReminderBanner');
+    if(!el) return;
+    el.dataset.variant = variant; // 'welcome' | 'firstTime' | 'repeat' — read back by applyBackupReminderI18n
+    el.style.display = 'block';
+    applyBackupReminderI18n();
+  }
+
+  function applyBackupReminderI18n(){
+    var el;
+    if((el = document.getElementById('backupReminderNowBtn'))) el.textContent = T('backupReminderNow');
+    if((el = document.getElementById('backupReminderLaterBtn'))) el.textContent = T('backupReminderLater');
+    var banner = document.getElementById('backupReminderBanner');
+    if(banner && banner.style.display !== 'none'){
+      var variant = banner.dataset.variant || 'firstTime';
+      var bodyKey = variant === 'welcome' ? 'backupReminderBodyWelcome'
+        : variant === 'repeat' ? 'backupReminderBodyRepeat'
+        : 'backupReminderBodyFirstTime';
+      if((el = document.getElementById('backupReminderTitle'))) el.textContent = T('backupReminderTitle');
+      if((el = document.getElementById('backupReminderBody'))) el.textContent = T(bodyKey);
     }
   }
 
-  // ---------- Manifest-driven release loading ----------
+  function maybeShowBackupReminderBanner(){
+    if(!shouldShowBackupReminder()) return;
+    var lastBackup = parseInt(localStorage.getItem(LAST_BACKUP_KEY) || '0', 10);
+    showBackupReminderBanner(lastBackup ? 'repeat' : 'firstTime');
+  }
+
+  function initBackupReminder(){
+    var isFirstEverSession = false;
+    try{
+      if(!localStorage.getItem(FIRST_USE_KEY)){
+        localStorage.setItem(FIRST_USE_KEY, String(Date.now()));
+        isFirstEverSession = true;
+      }
+    }catch(e){}
+    var nowBtn = document.getElementById('backupReminderNowBtn');
+    var laterBtn = document.getElementById('backupReminderLaterBtn');
+    if(nowBtn) nowBtn.addEventListener('click', exportCollectionBackup);
+    if(laterBtn) laterBtn.addEventListener('click', function(){
+      try{ localStorage.setItem(BACKUP_SNOOZE_KEY, String(Date.now() + BACKUP_SNOOZE_MS)); }catch(e){}
+      hideBackupReminderBanner();
+      toast(T('backupReminderSnoozedToast'));
+    });
+    if(isFirstEverSession){
+      // One-time awareness message on the very first visit ever, shown regardless of
+      // whether they've entered any data yet — the point is setting the expectation
+      // early ("this only lives on this device, get in the habit"), not judging whether
+      // there's anything to back up yet. The normal 14/30-day cadence takes over after this.
+      showBackupReminderBanner('welcome');
+    } else {
+      maybeShowBackupReminderBanner();
+    }
+  }
+
+
   // Checklists live in separate small JSON files (data/<release>.json) instead
   // of one giant blob, so: (1) new releases are just a new file + one manifest
   // line — no code changes, and (2) the app can show something fast instead of
@@ -1320,6 +1991,7 @@ var PWHL_PARALLELS = {};
   }
 
   function bootstrap(){
+    requestPersistentStorage();
     loadManifest().then(function(manifest){
       RELEASES = manifest.releases.slice().sort(function(a,b){ return a.order - b.order; });
       SET_ORDER = RELEASES.map(function(r){ return r.id; });
@@ -1340,10 +2012,12 @@ var PWHL_PARALLELS = {};
 
       return loadRelease(activeTab);
     }).then(function(){
-      loadState();
+      return loadState();
+    }).then(function(){
       applyStaticI18n();
       initInAppBrowserBanner();
       renderAll();
+      initBackupReminder();
       backgroundLoadRemaining();
     }).catch(function(err){
       console.error('Failed to start the app', err);
@@ -2768,6 +3442,48 @@ var PWHL_PARALLELS = {};
     if(e.target === overlay) overlay.classList.remove('open');
   });
 
+  // ---------- Box Scanner ----------
+  var scannerOverlay = document.getElementById('scannerOverlay');
+  document.getElementById('openScannerBtn').addEventListener('click', function(){
+    overlay.classList.remove('open'); // close Settings behind it
+    populateScannerReleaseSelect();
+    populateScannerTypeSelect();
+    applyScannerI18n();
+    scannerOverlay.classList.add('open');
+  });
+  function closeScannerOverlay(){
+    stopScannerCamera();
+    scannerOverlay.classList.remove('open');
+  }
+  document.getElementById('closeScanner').addEventListener('click', closeScannerOverlay);
+  scannerOverlay.addEventListener('click', function(e){
+    if(e.target === scannerOverlay) closeScannerOverlay();
+  });
+  document.getElementById('scannerReleaseSelect').addEventListener('change', function(){
+    populateScannerTypeSelect();
+  });
+  document.getElementById('scannerTypeSelect').addEventListener('change', function(){
+    updateScannerCaptureAvailability();
+    refreshScannerCounts();
+  });
+  document.getElementById('scannerStartBtn').addEventListener('click', startScannerCamera);
+  document.getElementById('scannerStopBtn').addEventListener('click', stopScannerCamera);
+  document.getElementById('scannerCaptureBtn').addEventListener('click', captureScannerFrame);
+  document.getElementById('scannerAutoToggle').addEventListener('change', function(e){
+    toggleScannerAutoCapture(e.target.checked);
+  });
+  document.getElementById('scannerDownloadBtn').addEventListener('click', downloadScannerZip);
+  document.getElementById('scannerClearBtn').addEventListener('click', clearScannerCaptures);
+  document.getElementById('scannerMemoryWarningDismiss').addEventListener('click', hideScannerMemoryWarning);
+  // Belt-and-suspenders: release the camera if the tab is hidden/closed while scanning,
+  // since the overlay-close path is the main one but tab switches/navigations can bypass it.
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden && scannerStream) stopScannerCamera();
+  });
+  window.addEventListener('pagehide', function(){
+    if(scannerStream) scannerStream.getTracks().forEach(function(t){ t.stop(); });
+  });
+
   // ---------- How To modal ----------
   var howToOverlay = document.getElementById('howToOverlay');
   document.getElementById('howToBtn').addEventListener('click', function(){
@@ -2849,7 +3565,7 @@ var PWHL_PARALLELS = {};
   });
   setsPickerFilter.addEventListener('input', renderSetsPickerBody);
 
-  document.getElementById('exportBtn').addEventListener('click', function(){
+  function exportCollectionBackup(){
     var payload = {
       appVersion: 3,
       exportedAt: new Date().toISOString(),
@@ -2869,7 +3585,10 @@ var PWHL_PARALLELS = {};
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toast('Collection downloaded');
-  });
+    try{ localStorage.setItem(LAST_BACKUP_KEY, String(Date.now())); }catch(e){}
+    hideBackupReminderBanner();
+  }
+  document.getElementById('exportBtn').addEventListener('click', exportCollectionBackup);
 
   document.getElementById('importBtn').addEventListener('click', function(){
     document.getElementById('importFile').click();
@@ -2911,7 +3630,8 @@ var PWHL_PARALLELS = {};
   document.getElementById('resetBtn').addEventListener('click', function(){
     if(confirm(T('resetAllConfirm'))){
       state = { cards:{}, fullDoubles:{}, overrides:{} };
-      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){} // in case a legacy copy is still sitting around
+      idbDelete(STORAGE_KEY).catch(function(){});
       renderAll();
       overlay.classList.remove('open');
       toast('Collection cleared');
