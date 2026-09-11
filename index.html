@@ -230,6 +230,26 @@
     scrollbar-width: none;
   }
   .tabs::-webkit-scrollbar{display:none;}
+  .release-bar{
+    background: var(--navy-2);
+    padding: 0 14px 12px;
+  }
+  .release-bar-btn{
+    width:100%;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13.5px; font-weight:700; color:white;
+    cursor:pointer;
+  }
+  .release-bar-btn:hover{ background: rgba(255,255,255,0.16); }
+  .release-bar-btn .count-pill{
+    font-size:10.5px; background: rgba(224,169,53,0.28); color: var(--gold);
+    padding: 1px 6px; border-radius: 999px; font-weight:700;
+  }
+  .release-bar-btn .picker-chevron{ font-size:11px; opacity:.85; margin-left:auto; }
   .tab{
     flex: 0 0 auto;
     padding: 9px 14px 11px;
@@ -728,6 +748,7 @@
   </header>
 
   <nav class="tabs" id="tabs"></nav>
+  <div class="release-bar" id="releaseBar"></div>
 
   <main id="main"></main>
 </div>
@@ -1236,8 +1257,10 @@ var PWHL_PARALLELS = {};
   // line — no code changes, and (2) the app can show something fast instead of
   // waiting to download every release that's ever existed.
   var LAST_TAB_KEY = 'pwhl_last_tab';
+  var lastReleaseTab = null; // last real release viewed, so the release bar has something to show even while on Missing/Chase/Doubles
   function setActiveTab(id){
     activeTab = id;
+    if(SET_ORDER.indexOf(id) >= 0) lastReleaseTab = id;
     try{ localStorage.setItem(LAST_TAB_KEY, id); }catch(e){}
   }
 
@@ -1313,6 +1336,7 @@ var PWHL_PARALLELS = {};
       var flagshipReleases = RELEASES.filter(function(r){ return r.group === 'Flagship'; });
       var defaultTab = (flagshipReleases.length ? flagshipReleases[flagshipReleases.length-1] : RELEASES[RELEASES.length-1]).id;
       activeTab = (savedTab && SET_ORDER.indexOf(savedTab) >= 0) ? savedTab : defaultTab;
+      lastReleaseTab = activeTab;
 
       return loadRelease(activeTab);
     }).then(function(){
@@ -1530,18 +1554,21 @@ var PWHL_PARALLELS = {};
 
     // One button for "which release am I looking at" — opens the Sets picker
     // instead of a tab per release, since that list only grows over time.
-    var isReleaseActive = SET_ORDER.indexOf(activeTab) >= 0;
+    // Lives in its own full-width bar (not the horizontally-scrolling tabs
+    // strip above) so it's always visible, never hidden behind a swipe.
+    var releaseBar = document.getElementById('releaseBar');
+    releaseBar.innerHTML = '';
     var releaseBtn = document.createElement('button');
-    releaseBtn.className = 'tab release-picker-btn' + (isReleaseActive && !searchQuery.trim() ? ' active':'');
-    var curLabel = SET_LABELS[activeTab] || activeTab || '…';
+    releaseBtn.className = 'release-bar-btn';
+    var curLabel = SET_LABELS[lastReleaseTab] || lastReleaseTab || '…';
     var curCount = '…';
-    if(isReleaseActive && loadedReleaseIds[activeTab]){
-      var t2 = setTotals(activeTab);
+    if(loadedReleaseIds[lastReleaseTab]){
+      var t2 = setTotals(lastReleaseTab);
       curCount = t2.have + '/' + t2.total;
     }
     releaseBtn.innerHTML = '<span>📚 '+curLabel+'</span><span class="count-pill">'+curCount+'</span><span class="picker-chevron">▾</span>';
     releaseBtn.addEventListener('click', function(){ openSetsPicker(); });
-    tabsEl.appendChild(releaseBtn);
+    releaseBar.appendChild(releaseBtn);
   }
 
   function countChase(){
@@ -2783,7 +2810,7 @@ var PWHL_PARALLELS = {};
         } else {
           badge = T('tapToLoad');
         }
-        html += '<button class="sets-picker-item'+(r.id===activeTab?' active':'')+'" data-release-id="'+r.id+'">'+
+        html += '<button class="sets-picker-item'+(r.id===lastReleaseTab?' active':'')+'" data-release-id="'+r.id+'">'+
           '<span class="sets-picker-item-name">'+r.label+(r.complete===false?'<span class="sets-picker-incomplete">'+T('incompleteBadge')+'</span>':'')+'</span>'+
           '<span class="sets-picker-badge">'+badge+'</span>'+
         '</button>';
