@@ -2,7 +2,7 @@
   "releases": [
     {
       "id": "UD2024",
-      "label": "UD 2024",
+      "label": "Upper Deck 2024",
       "group": "Flagship",
       "file": "data/ud2024.json",
       "order": 1,
@@ -10,7 +10,7 @@
     },
     {
       "id": "UD2024-2025",
-      "label": "UD 2024-25",
+      "label": "Upper Deck 2024-25",
       "group": "Flagship",
       "file": "data/ud2024-2025.json",
       "order": 2,
@@ -18,7 +18,7 @@
     },
     {
       "id": "UD2025-2026",
-      "label": "UD 2025-26",
+      "label": "Upper Deck 2025-26",
       "group": "Flagship",
       "file": "data/ud2025-2026.json",
       "order": 3,
@@ -26,7 +26,7 @@
     },
     {
       "id": "FU2025-2026",
-      "label": "FU 2025-26",
+      "label": "Fleer Ultra 2025-26",
       "group": "Flagship",
       "file": "data/fu2025-2026.json",
       "order": 4,
