@@ -87,6 +87,14 @@
       "file": "data/timhortonscanada2025-2026.json",
       "order": 11,
       "complete": false
+    },
+    {
+      "id": "LeafMetalWomenOfSport2025",
+      "label": "Leaf Metal Women of Sport 2025",
+      "group": "Specialty",
+      "file": "data/leafmetalwomenofsport2025.json",
+      "order": 12,
+      "complete": false
     }
   ]
 }
